@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1761067216193,
+      "tag": "0000_heavy_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1761069046974,
+      "tag": "0001_new_vindicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1761070937503,
+      "tag": "0002_far_owl",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1761075426668,
+      "tag": "0003_wide_kang",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1761247313098,
+      "tag": "0004_good_mephisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1761247987726,
+      "tag": "0005_old_doctor_spectrum",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1761328744155,
+      "tag": "0006_worried_plazm",
+      "breakpoints": true
+    }
+  ]
+}
