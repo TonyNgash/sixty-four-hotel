@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { performBulkDelete } from '@/lib/utils/bulk-delete';
+import { performBulkDelete, BulkDeleteTableName } from '@/lib/utils/bulk-delete';
 import type { ApiResponse } from '@/types/api';
+
 
 interface BulkDeleteRequest {
   tableName: string;
@@ -88,8 +89,10 @@ export async function POST(request: NextRequest) {
 
     const { data: body } = parseResult;
 
+    const tableName = body.tableName as BulkDeleteTableName;
+
     // Perform bulk deletion - NOW PASSING tableName STRING DIRECTLY
-    const result = await performBulkDelete(body.tableName, body.ids);
+    const result = await performBulkDelete(tableName, body.ids);
 
     if (!result.success) {
       const response: ApiResponse = {

@@ -25,70 +25,78 @@ export async function GET() {
   }
 }
 
-/* ==============================================================
-   POST – Create room
-   ============================================================== */
-
-// export async function POST(request: NextRequest) {
-//   try {
-//     const formData = await request.formData();
-//     const roomNumber = formData.get('roomNumber') as string | null;
-//     const status = formData.get('status') as string | null;
-//     const floor = formData.get('floor') as string | null;
-//     const categoryId = formData.get('categoryId') as string | null;
-//     const viewTypeId = formData.get('viewTypeId') as string | null;
-//     const amenityIds = formData.getAll('amenityIds') as string[];
-//     // const images = formData.getAll('images') as File[];
-
-//     if (!roomNumber || !status || !floor) {
-//       return NextResponse.json(
-//         { success: false, error: 'Missing required fields' },
-//         { status: 400 }
-//       );
-//     }
-
-//     const createData: RoomCreateData = {
-//       roomNumber: roomNumber.trim(),
-//       status: status as 'available' | 'occupied' | 'maintenance',
-//       floor: Number(floor),
-//       categoryId: categoryId ? Number(categoryId) : undefined,
-//       viewTypeId: viewTypeId ? Number(viewTypeId) : undefined,
-//       amenityIds: amenityIds.map(id => Number(id)).filter(n => !isNaN(n)),
-//       // images: images.length > 0 ? images : undefined,
-//     };
-
-//     const result = await createRoomService(createData);
-//     if (!result.success) {
-//       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
-//     }
-
-//     return NextResponse.json(
-//       { success: true, data: result.data },
-//       { status: 201 }
-//     );
-//   } catch (err: unknown) {
-//     const message = err instanceof Error ? err.message : 'Unknown error';
-//     return NextResponse.json(
-//       { success: false, error: 'Server error: ' + message },
-//       { status: 500 }
-//     );
-//   }
-// }
+// app/api/rooms/route.ts
 
 export async function POST(request: NextRequest) {
   try {
-    // DO NOT USE request.formData() AT ALL
-    // PASS RAW BODY TO SERVICE
-    const result = await createRoomService(request);
+    
+    const formData = await request.formData();
 
-    if (!result.success) {
-      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+    const roomNumber = formData.get('roomNumber') as string | null;
+    const categoryId = formData.get('categoryId') as string | null;
+    const floor = formData.get('floor') as string | null;
+    const viewTypeId = formData.get('viewTypeId') as string | null;
+    const status = formData.get('status') as string | null;
+    const amenityIds = formData.getAll('amenityIds') as string[];
+    
+    // THIS IS THE KEY: Extract files correctly
+    const imageFiles = formData.getAll('images') as File[];
+    const validImageFiles = imageFiles.filter(
+      (f): f is File => f instanceof File && f.size > 0 && f.name !== 'undefined'
+    );
+    
+
+    // Basic validation
+    if (!roomNumber || !status || !floor) {
+      return NextResponse.json(
+        { success: false, error: 'Room number, status, and floor are required' },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ success: true, data: result.data }, { status: 201 });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ success: false, error: 'Server error: ' + message }, { status: 500 });
+    const floorNum = Number(floor);
+    if (isNaN(floorNum) || floorNum < 1 || floorNum > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Floor must be between 1 and 100' },
+        { status: 400 }
+      );
+    }
+
+    // Build correct data object
+    const createData: RoomCreateData = {
+      roomNumber: roomNumber.trim(),
+      categoryId: categoryId ? Number(categoryId) : undefined,
+      floor: floorNum,
+      viewTypeId: viewTypeId ? Number(viewTypeId) : undefined,
+      status: status as 'available' | 'occupied' | 'maintenance',
+      amenityIds: amenityIds.length > 0 
+        ? amenityIds.map(Number).filter(n => !isNaN(n))
+        : undefined,
+      images: validImageFiles.length > 0 ? validImageFiles : undefined,
+    };
+
+    // NOW pass the correct object
+    
+    const result = await createRoomService(createData);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, data: result.data, message: 'Room created successfully' },
+      { status: 201 }
+    );
+
+  } catch (error) {
+    console.error('POST /api/rooms error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to create room' },
+      { status: 500 }
+    );
   }
 }
 
@@ -201,87 +209,3 @@ async function createRoomWithJson(body: Partial<RoomCreateData>) {
     { status: 201 }
   );
 }
-
-/* ==============================================================
-   PUT – Update room (reuse create logic)
-   ============================================================== */
-/* ==============================================================
-   PUT – Update room (FINAL, NO ERRORS)
-   ============================================================== */
-// export async function PUT(request: NextRequest) {
-//   try {
-//     const contentType = request.headers.get('content-type') || '';
-//     if (!contentType.includes('multipart/form-data')) {
-//       return NextResponse.json(
-//         { success: false, error: 'Use multipart/form-data for file uploads' },
-//         { status: 400 }
-//       );
-//     }
-
-//     const formData = await request.formData();
-
-//     // Extract ID from URL: /api/rooms → PUT
-//     const url = new URL(request.url);
-//     const idStr = url.pathname.split('/').pop();
-//     if (!idStr || isNaN(Number(idStr))) {
-//       return NextResponse.json(
-//         { success: false, error: 'Invalid or missing room ID' },
-//         { status: 400 }
-//       );
-//     }
-//     const id = Number(idStr);
-
-//     const roomNumber = formData.get('roomNumber') as string | null;
-//     const categoryId = formData.get('categoryId') as string | null;
-//     const status = formData.get('status') as string | null;
-//     const floor = formData.get('floor') as string | null;
-//     const viewTypeId = formData.get('viewTypeId') as string | null;
-//     const amenityIds = formData.getAll('amenityIds') as string[];
-//     const imageFiles = (formData.getAll('images') as File[]).filter(
-//       (f): f is File => f instanceof File && f.size > 0
-//     );
-
-//     const floorNum = floor ? Number(floor) : undefined;
-//     if (floorNum !== undefined && (isNaN(floorNum) || floorNum < 1 || floorNum > 100)) {
-//       return NextResponse.json(
-//         { success: false, error: 'Floor must be 1-100' },
-//         { status: 400 }
-//       );
-//     }
-
-//     const validStatuses = ['available', 'occupied', 'maintenance'] as const;
-//     type StatusType = typeof validStatuses[number];
-//     if (status && !validStatuses.includes(status as StatusType)) {
-//       return NextResponse.json(
-//         { success: false, error: 'Invalid status' },
-//         { status: 400 }
-//       );
-//     }
-
-//     const updateData: RoomUpdateData = {
-//       roomNumber: roomNumber?.trim() || undefined,
-//       categoryId: categoryId ? (categoryId === 'null' ? null : Number(categoryId)) : undefined,
-//       status: status as StatusType | undefined,
-//       floor: floorNum,
-//       viewTypeId: viewTypeId ? (viewTypeId === 'null' ? null : Number(viewTypeId)) : undefined,
-//       amenityIds: amenityIds.length > 0 ? amenityIds.map(Number).filter(n => !isNaN(n)) : undefined,
-//       images: imageFiles.length > 0 ? imageFiles : undefined,
-//     };
-
-//     const result = await updateRoomService(id, updateData);
-//     if (!result.success) {
-//       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
-//     }
-
-//     return NextResponse.json(
-//       { success: true, data: result.data, message: 'Room updated' },
-//       { status: 200 }
-//     );
-//   } catch (err) {
-//     console.error('PUT /api/rooms error:', err);
-//     return NextResponse.json(
-//       { success: false, error: 'Internal server error' },
-//       { status: 500 }
-//     );
-//   }
-// }

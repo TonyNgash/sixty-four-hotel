@@ -15,12 +15,13 @@ export default function HeroContent({ title, subtitle, description, buttonText, 
       <h1 className="text-6xl md:text-8xl font-playfair font-bold text-black">{title}</h1>
       <h2 className="text-3xl md:text-4xl font-montserrat text-gray-800">{subtitle}</h2>
       <p className="text-lg md:text-xl font-montserrat text-gray-600 max-w-md">{description}</p>
-      <button
+      <a
+        href="#room-categories-section"
         className="px-6 py-3 rounded-md text-white font-montserrat font-semibold"
         style={{ backgroundColor: buttonColor }}
       >
         {buttonText}
-      </button>
+      </a>
     </div>
   );
 }

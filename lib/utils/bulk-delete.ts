@@ -1,6 +1,7 @@
 import { db } from '@/lib/database';
 import { inArray } from 'drizzle-orm';
 import { amenities, roomCategories, rooms, viewTypes } from '@/lib/database/schema';
+import { roomAmenities, roomImages } from '@/lib/database/schema';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 
 // Define the tables that support bulk delete
@@ -95,53 +96,83 @@ export async function performBulkDelete(
   tableName: BulkDeleteTableName,
   ids: number[]
 ): Promise<BulkDeleteResult> {
+  // Validate input
+  const validation = validateBulkDeleteRequest(tableName, ids);
+  if (!validation.isValid) {
+    return {
+      success: false,
+      deletedCount: 0,
+      error: validation.error
+    };
+  }
+
+  const table = getTableByName(tableName);
+
   try {
-    // Validate input
-    const validation = validateBulkDeleteRequest(tableName, ids);
-    if (!validation.isValid) {
-      return {
-        success: false,
-        deletedCount: 0,
-        error: validation.error
-      };
+    // SPECIAL CASE: rooms require child deletion first
+    if (tableName === 'rooms') {
+      return await deleteRoomsWithRelations(ids);
     }
 
-    // Get the table
-    const table = getTableByName(tableName);
-
-    // Perform the bulk deletion
+    // For all other tables (amenities, categories, view-types)
     const result = await db
       .delete(table)
       .where(inArray(table.id, ids))
       .returning();
 
     const deletedCount = result.length;
+    console.log(`Bulk delete: Deleted ${deletedCount} records from ${tableName}`);
 
-    console.log(`Bulk delete: Deleted ${deletedCount} records from ${tableName} with IDs: ${ids.join(', ')}`);
-
-    return {
-      success: true,
-      deletedCount
-    };
+    return { success: true, deletedCount };
   } catch (error) {
     console.error(`Error performing bulk delete for ${tableName}:`, error);
-    
-    // Handle foreign key constraint errors
-    if (error instanceof Error && error.message.includes('FOREIGN KEY constraint failed')) {
-      return {
-        success: false,
-        deletedCount: 0,
-        error: `Cannot delete ${tableName} that are associated with other records. Please remove associations first.`
-      };
-    }
-
     return {
       success: false,
       deletedCount: 0,
-      error: error instanceof Error ? error.message : `Failed to delete records from ${tableName}`
+      error: error instanceof Error ? error.message : `Failed to delete records`
     };
   }
 }
+
+
+/**
+ * Safely delete rooms and all their relations
+ */
+async function deleteRoomsWithRelations(ids: number[]): Promise<BulkDeleteResult> {
+  return await db.transaction(async (tx) => {
+    try {
+      // 1. Delete room images
+      await tx
+        .delete(roomImages)
+        .where(inArray(roomImages.room_id, ids));
+
+      // 2. Delete room amenities
+      await tx
+        .delete(roomAmenities)
+        .where(inArray(roomAmenities.room_id, ids));
+
+      // 3. Finally delete rooms
+      const result = await tx
+        .delete(rooms)
+        .where(inArray(rooms.id, ids))
+        .returning();
+
+      const deletedCount = result.length;
+      console.log(`Bulk delete rooms: Deleted ${deletedCount} rooms and their relations`);
+
+      return { success: true, deletedCount };
+    } catch (error) {
+      tx.rollback();
+      console.error('Error in room bulk delete transaction:', error);
+      return {
+        success: false,
+        deletedCount: 0,
+        error: 'Failed to delete rooms with relations. A booking may still exist.'
+      };
+    }
+  });
+}
+
 
 /**
  * Check if entities exist before deletion (optional pre-validation)

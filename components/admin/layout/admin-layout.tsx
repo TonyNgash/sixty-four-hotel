@@ -1,77 +1,68 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Sidebar } from './sidebar';
 import { MobileHeader } from './mobile-header';
 import { MobileDrawer } from './mobile-drawer';
 import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/lib/constants/routes';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  // FIXED: Default to false — drawer closed on load
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
-  // 🔐 LAYER 1: Client-side protection & navigation
-  useEffect(() => {
-    // If not loading and no user, redirect to login
-    if (!isLoading && !user) {
-      console.log('AdminLayout: No user detected, redirecting to login');
-      router.push('/login');
-    }
-  }, [user, isLoading, router]);
-
-  // 🚪 Enhanced logout with navigation
-  const handleLogout = async () => {
-    console.log('AdminLayout: Logout initiated');
-    await logout();
-    // Force navigation to login after logout
-    router.push('/login');
-  };
-
-  // ⏳ Loading state while checking authentication
+  // Redirect to login if not authenticated
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking authentication...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // 🛡️ Protection: Don't render layout if no user
   if (!user) {
-    console.log('AdminLayout: No user, not rendering layout');
-    return null; // Will redirect via useEffect above
+    router.replace(ROUTES.admin.login);
+    return null;
   }
 
-  // ✅ User is authenticated - render the admin layout
+  const handleLogout = async () => {
+    await logout();
+    router.replace(ROUTES.admin.login);
+  };
+
   return (
-    <>
-      <div>
-        {/* Mobile drawer */}
-        <MobileDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
-        {/* Desktop sidebar */}
-        <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+    <div className="h-screen flex overflow-hidden bg-gray-50">
+      {/* MOBILE DRAWER — only visible on <lg */}
+      <MobileDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* DESKTOP SIDEBAR — fixed, always visible on lg+ */}
+      <div className="hidden lg:flex lg:flex-shrink-0">
+        <div className="flex flex-col w-72">
           <Sidebar />
         </div>
+      </div>
 
-        {/* Mobile header */}
+      {/* MAIN CONTENT */}
+      <div className="flex flex-col flex-1 w-0 overflow-hidden">
+        {/* MOBILE HEADER — only on <lg */}
         <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* Main content */}
-        <main className="lg:pl-72">
-          <div className="min-h-screen bg-gray-50">
-            {/* Top bar with user info */}
-            <div className="bg-white shadow-sm border-b">
-              <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 py-4">
+        {/* PAGE CONTENT */}
+        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* User Greeting + Logout */}
+              <div className="flex justify-between items-center mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
                   <p className="text-gray-600">
@@ -85,15 +76,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   Logout
                 </button>
               </div>
-            </div>
 
-            {/* Page content */}
-            <div className="p-4 sm:p-6 lg:p-8">
+              {/* Page Children */}
               {children}
             </div>
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 }

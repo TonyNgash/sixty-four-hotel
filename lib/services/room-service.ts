@@ -114,6 +114,7 @@ export async function getAllRoomsService(): Promise<ServiceResult<RoomWithRelati
  * Create a new room
  */
 export async function createRoomService(data: RoomCreateData): Promise<ServiceResult<RoomWithRelations>> {
+  // console.log('createRoomService received:', typeof data, 'has images?', !!(data as any).images);
   try {
     const validationError = validateRoomData(data);
     if (validationError) {
@@ -149,13 +150,14 @@ export async function createRoomService(data: RoomCreateData): Promise<ServiceRe
     const newRoom = await createRoom(insertData);
 
     // === INSERT IMAGES ===
+        // === INSERT IMAGES WITH FIRST AS PRIMARY ===
     if (imageUrls.length > 0) {
-      const insertPromises = imageUrls.map((url) =>
+      const insertPromises = imageUrls.map((url, index) =>
         insertRoomImage({
           roomId: newRoom.id,
           imageUrl: url,
-          sortOrder: 0,
-          isPrimary: false,
+          sortOrder: index,
+          isPrimary: index === 0, // First image is primary
         })
       );
       await Promise.all(insertPromises);

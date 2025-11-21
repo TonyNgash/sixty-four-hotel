@@ -67,9 +67,15 @@ export function useRooms(): UseRoomsReturn {
    * Create a new room with FormData for file upload
    */
   const createRoom = async (data: RoomCreateData & { images?: File[] }): Promise<{ success: boolean; error?: string }> => {
+    console.log('createRoom RECEIVED:', {
+    imagesCount: data.images?.length ?? 0,
+    firstImageName: data.images?.[0]?.name,
+    isFile: data.images?.[0] instanceof File,
+    });
     try {
       // Check if we have images to upload
       const hasImages = data.images && data.images.length > 0;
+      console.log('hasImages?', hasImages);
 
       if (hasImages) {
         // Use FormData for file upload
@@ -79,10 +85,10 @@ export function useRooms(): UseRoomsReturn {
         return await createRoomWithJson(data);
       }
     } catch (error) {
-      console.error('Error creating room:', error);
+      console.error('Error creating room use-rooms.ts:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create room',
+        error: error instanceof Error ? error.message : 'Failed to create room use-rooms.ts',
       };
     }
   };
@@ -107,9 +113,15 @@ export function useRooms(): UseRoomsReturn {
     if (data.images) {
       data.images.forEach(file => formData.append('images', file));
     }
+    
+    console.log('SENDING FormData with images:', data.images?.length);
+    for (const [key, value] of formData.entries()) {
+      console.log('FormData entry:', key, value instanceof File ? `File: ${value.name}` : value);
+    }
 
     // CRITICAL: LET BROWSER SET Content-Type
     // DO NOT SET HEADERS
+
     const response = await fetch('/api/rooms', {
       method: 'POST',
       body: formData,

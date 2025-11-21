@@ -50,51 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-/**
- * PUT /api/rooms/[id]
- * Update a room with support for FormData file uploads
- */
-// export async function PUT(request: NextRequest, { params }: RouteParams) {
-//   try {
-//     const id = parseInt(params.id);
 
-//     if (isNaN(id) || id < 1) {
-//       const response: ApiResponse = {
-//         success: false,
-//         error: 'Invalid room ID'
-//       };
-//       return NextResponse.json(response, { status: 400 });
-//     }
-
-//     // Check content type to determine if it's FormData (file upload) or JSON
-//     const contentType = request.headers.get('content-type') || '';
-
-//     if (contentType.includes('multipart/form-data')) {
-//       // Handle FormData with file uploads
-//       return await handleFormDataRequest(request, id);
-//     } else {
-//       // Handle JSON data (existing behavior)
-//       return await handleJsonRequest(request, id);
-//     }
-//   } catch (error) {
-//     console.error('Error in PUT /api/rooms/[id]:', error);
-    
-//     // Handle JSON parse errors
-//     if (error instanceof SyntaxError) {
-//       const response: ApiResponse = {
-//         success: false,
-//         error: 'Invalid JSON in request body'
-//       };
-//       return NextResponse.json(response, { status: 400 });
-//     }
-
-//     const response: ApiResponse = {
-//       success: false,
-//       error: 'Internal server error'
-//     };
-//     return NextResponse.json(response, { status: 500 });
-//   }
-// }
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   const id = parseInt(params.id, 10);
   if (isNaN(id) || id < 1) {

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils/cn';
 import { useRoomCategories } from '@/hooks/use-room-categories';
 import { useViewTypes } from '@/hooks/use-view-types';
 import { useAmenities } from '@/hooks/use-amenities';
-import type { RoomCategory, ViewType, Amenity } from '@/types/database';
+
 
 export interface RoomFormData {
   roomNumber: string;
@@ -136,12 +136,15 @@ export function RoomForm({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('handleSubmit() has been triggered: room-form 139');
     e.preventDefault();
     setFormError(null);
 
+    
+
     // Basic client-side validation
     if (!formData.roomNumber.trim()) {
-      setFormError('Room number is required');
+      setFormError('Room number is required room-form:145');
       return;
     }
 
@@ -165,7 +168,14 @@ export function RoomForm({
       setFormError('At least one room image is required');
       return;
     }
-
+    //this will never run since html is taking care of the required input fields
+    console.log('Validation is complete: room-form 169');
+    
+    console.log('FORM DATA BEFORE onSubmit:', {
+      imagesCount: formData.images.length,
+      firstImage: formData.images[0]?.name,
+      isFile: formData.images[0] instanceof File,
+    });
     onSubmit(formData);
   };
 
@@ -198,7 +208,7 @@ export function RoomForm({
         <input
           type="text"
           id="roomNumber"
-          required
+          
           value={formData.roomNumber}
           onChange={(e) => setFormData(prev => ({ ...prev, roomNumber: e.target.value }))}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

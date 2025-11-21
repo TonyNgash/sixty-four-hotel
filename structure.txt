@@ -38,6 +38,10 @@
 		- /home-config
 			- sections-config.ts
 			- sections-types.ts
+		- /payment
+			- page.tsx
+		- /room-details
+			- page.tsx
 		- layout.tsx
 		- page.tsx
 	- /(staff)
@@ -70,8 +74,6 @@
 		- /room-categories
 			- /[id]
 				- route.ts
-			- /bulk-delete
-				- route.ts
 			- route.ts
 		- /rooms
 			- /[id]
@@ -83,6 +85,10 @@
 				- route.ts
 			- route.ts
 	- /contacts
+	- /fonts
+		- geist.ts
+		- montserrat.ts
+		- playfair.ts
 	- favicon.ico
 	- globals.css
 	- layout.tsx
@@ -240,9 +246,17 @@
 	- 0005_old_doctor_spectrum.sql
 	- 0006_worried_plazm.sql
 - /public
+	- /fonts
+		- Geist-VariableFont_wght.woff2
+		- Montserrat-Italic-VariableFont_wght.woff2
+		- Montserrat-VariableFont_wght.woff2
+		- PlayfairDisplay-Italic-VariableFont_wght.woff2
+		- PlayfairDisplay-VariableFont_wght.woff2
 	- /images
 		- /categories
+			- 13830686-lens-flares-001-1762868512334-rc8hmasjxgp.jpg
 			- food1-1761496104536-qz8qv8x1quq.jpeg
+			- gradient-01-1762604413638-6uc70aaxbap.png
 			- image4-1761321799231-xa384rij3w.jpg
 			- image9-1761321768038-0cc50o26ne6.jpg
 			- isometric-bnb-apartment-1761340856479-0di0xf7h9b9g.png
@@ -250,6 +264,15 @@
 			- isometric-single-bed-1761340713641-0hgau2m29uaj.png
 			- isometric-single-bed-1761340792893-fsgzz9e10x.png
 		- /frontend
+			- bg_01.jpeg
+			- bg_02.jpeg
+			- bg_03.jpeg
+			- image.jpg
+			- image2.jpg
+			- image3.jpg
+			- image4.jpg
+			- image5.jpg
+			- image6.jpg
 			- sixty_four_logo-_no_bg_cropped.png
 		- /home
 			- /hero
@@ -257,6 +280,7 @@
 				- palm_tree_01.webp
 				- sunglare_overlay_01.webp
 			- /night-club
+				- reggae-night.jpg
 				- reggae-night.webp
 				- rnb-night.webp
 				- soul-night.webp
@@ -281,6 +305,19 @@
 				- single-room.webp
 		- /icons
 		- /rooms
+			- image.jpg
+			- image2.jpg
+			- image3.jpg
+			- room-13830686-lens-flares-001-1763084430065-bq5n7d4j26n.jpg
+			- room-3188948-1763084429456-fdetukwo1wp.jpg
+			- room-club-02-1763084508982-fa8g92didgf.jpg
+			- room-club-03-1763084508983-63ngoqwskx9.jpg
+			- room-club-12-1763084508985-3fftpk1stqf.jpg
+			- room-club-13-1763084508987-j6hvnxswptm.jpg
+			- room-club-14-1763084508988-aqwkisa1r9v.jpg
+			- room-food2-1763084876302-u51zh00kawq.jpg
+			- room-food3-1763084876302-sowajkb94ln.jpg
+			- room-food4-1763084876303-rh2obskgzt.jpeg
 	- /videos
 	- file.svg
 	- globe.svg
@@ -304,7 +341,6 @@
 - eslint.config.mjs
 - generate-structure.cjs
 - globals.d.ts
-- gradient-test.html
 - hotel.db
 - middleware.ts
 - next.config.ts
@@ -312,8 +348,9 @@
 - package.json
 - postcss.config.mjs
 - README.md
+- sixty-four.zip
 - structure.txt
 - tsconfig.json
 
-folders: 87
-files: 220
+folders: 90
+files: 254

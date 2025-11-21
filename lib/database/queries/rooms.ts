@@ -482,10 +482,3 @@ export async function insertRoomImage(data: RoomImageInsert) {
   }).returning();
 }
 
-// export async function deleteRoomImagesByRoomId(roomId: number) {
-//   return await db.delete(roomImages).where(eq(roomImages.room_id, roomId));
-// }
-
-// export async function getRoomImagesByRoomId(roomId: number) {
-//   return await db.select().from(roomImages).where(eq(roomImages.room_id, roomId));
-// }

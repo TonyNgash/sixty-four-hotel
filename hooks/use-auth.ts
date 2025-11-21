@@ -3,6 +3,7 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { User } from '@/lib/auth/types';
 import { AuthContext } from '@/lib/auth/context';
+import { ROUTES } from '@/lib/constants/routes';
 
 export interface AuthContextType {
   user: User | null;
@@ -39,7 +40,7 @@ export function useAuthLogic() {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/admin/login', {
+      const response = await fetch(ROUTES.api.adminLogin, { // ← DYNAMIC
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -59,7 +60,7 @@ export function useAuthLogic() {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/admin/logout', { method: 'POST' });
+      await fetch(ROUTES.api.adminLogout, { method: 'POST' }); // ← DYNAMIC
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {

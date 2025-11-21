@@ -1,5 +1,9 @@
 // File: app/(frontend)/home-config/sections-config.ts
-// Purpose: This file defines the configuration array for all home page sections. It starts with the hero section as the first entry, marked as non-lazy for critical loading. Future sections (e.g., room-categories) can be added here as objects in the array. Each section object includes metadata for rendering, such as ID, title for accessibility, the component path for dynamic import (not used for hero since it's static), a lazy flag, and static props specific to the section (e.g., hero text and button details). This makes the home page extensible without changing page.tsx. Types are defined inline with a discriminated union for type safety based on section ID.
+// Purpose: This file defines the configuration array for all home page sections. 
+// It starts with the hero section as the first entry, marked as non-lazy for critical loading. 
+// Future sections (e.g., room-categories) can be added here as objects in the array. 
+// Each section object includes metadata for rendering, such as ID, title for accessibility, the component path for dynamic import (not used for hero since it's static), a lazy flag, and static props specific to the section (e.g., hero text and button details). This makes the home page extensible without changing page.tsx. 
+// Types are defined inline with a discriminated union for type safety based on section ID.
 
 interface HeroProps {
   title: string;
@@ -26,6 +30,7 @@ interface HeroSectionConfig extends BaseSectionConfig {
 // ── Room Categories Section ──
 interface RoomCategoriesSectionConfig extends BaseSectionConfig {
   id: 'room-categories';
+  subtitle: string;
   props: Record<string, never>; // No props needed — data from service
 }
 
@@ -66,9 +71,9 @@ export const sections: HomeSectionConfig[] = [
     lazy: false,
     props: {
       title: 'SixtyFour',
-      subtitle: 'Hotel & Accommodation',
-      description: 'Featuring SixtyFour Night Club and Restaurant. Located in the heart of Limuru Town.',
-      buttonText: 'BOOK A ROOM',
+      subtitle: 'Hotel & Apartments',
+      description: 'We have \"Air Bnbs\" as well. Located in the heart of Limuru Town.',
+      buttonText: 'BOOK A ROOM TODAY',
       buttonColor: '#EB1B69',
     },
   },
@@ -77,7 +82,7 @@ export const sections: HomeSectionConfig[] = [
   {
     id: 'room-categories',
     title: 'Our Room Categories',
-    // subtitle: 'Explore our diverse range of rooms designed to suit every traveler\'s needs.',
+    subtitle: 'From intimate single rooms to luxurious furnished apartments and Air BnBs — find your perfect stay.',
     componentPath: '@/components/frontend/home-sections/room-categories/room-categories-section',
     lazy: true,
     props: {}, // No props — data comes from service

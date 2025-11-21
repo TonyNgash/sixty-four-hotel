@@ -22,7 +22,7 @@ export default async function NightClubSection() {
           The best night <br/> you will ever have.
         </h2>
         <p className="text-sm text-gray-300 font-montserrat mt-4">
-          Creating the best memories ever since we opened our doors.
+          Creating the best memories in our popular night club.
         </p>
       </div>
 

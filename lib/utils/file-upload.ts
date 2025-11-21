@@ -202,22 +202,11 @@ export async function deleteRoomCategoryImage(publicUrl: string): Promise<{ succ
 /**
  * Room image specific upload function
  */
-// export async function uploadRoomImage(file: File, roomNumber?: string): Promise<FileUploadResult> {
-//   const uploadDir = path.join(process.cwd(), 'public', 'images', 'rooms');
-//   const fileNamePrefix = roomNumber ? `room-${roomNumber.replace(/\s+/g, '-').toLowerCase()}` : 'room';
-//   return uploadFile(file, uploadDir, ROOM_IMAGE_OPTIONS, fileNamePrefix);
-// }
+
 export async function uploadRoomImage(file: File): Promise<FileUploadResult> {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const response = await fetch('/api/upload/room', {
-    method: 'POST',
-    body: formData,
-  });
-
-  const result: FileUploadResult = await response.json();
-  return result;
+  console.log('UPLOADING FILE:', file.name, file.size, file.type);
+  const uploadDir = path.join(process.cwd(), 'public', 'images', 'rooms');
+  return uploadFile(file, uploadDir, ROOM_IMAGE_OPTIONS, 'room');
 }
 
 /**

@@ -1,68 +1,37 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken } from './lib/auth/utils';
+import { ROUTES } from '@/lib/constants/routes';
 
-export async function middleware(request: NextRequest) {
+const ADMIN_PATHS = [
+  ROUTES.admin.dashboard,
+  ROUTES.admin.rooms,
+  ROUTES.admin.bookings,
+  ROUTES.admin.staff,
+  ROUTES.admin.settings,
+  ROUTES.admin.revenue,
+];
 
+export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value;
-  console.log('=== MIDDLEWARE START ===');
-  console.log('Path:', request.nextUrl.pathname);
-  console.log('Token exists:', !!token);
-  console.log('All cookies:', request.cookies.getAll().map(c => c.name));
-  // Protect admin routes
-  // if (request.nextUrl.pathname.startsWith('/admin')) {
+  const { pathname } = request.nextUrl;
 
-    // Allow access to login page
-    if (request.nextUrl.pathname === '/login') {
-      console.log('Login route check');
-      if (token) {
-        try {
-          console.log('Token found, verifying...');
-          verifyToken(token);
-          console.log('Token valid, redirecting to dashboard');
-          // If valid token, redirect to dashboard
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        } catch{
-          // Invalid token, allow access to login
-          // console.log('Token invalid:', error.message);
-          console.log('Token invalid:');
-          return NextResponse.next();
-        }
-      }
-      console.log('No token, allowing login');
-      return NextResponse.next();
-    }
+  // Protect all admin routes
+  const isAdminRoute = ADMIN_PATHS.some(path => pathname.startsWith(path));
 
-    // Protect other admin routes
-     if (request.nextUrl.pathname === '/dashboard') {
-        console.log('Dashboard route check');
-        if (!token) {
-              console.log('No token, redirecting to login');
-              return NextResponse.redirect(new URL('/login', request.url));
-        }
-        try {
-          console.log('Token found, verifying for dashboard...');
-          verifyToken(token);
-          console.log('Dashboard access granted');
-          return NextResponse.next();
-        }catch (error) {
-          console.log('Dashboard token invalid, redirecting to login');
-          // Invalid token - redirect to login
-          const response = NextResponse.redirect(new URL('/login', request.url));
-          response.cookies.set('auth-token', '', { maxAge: 0 });
-          return response;
-        }
-     }
-    
+  if (isAdminRoute && !token) {
+    const loginUrl = new URL(ROUTES.admin.login, request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
+  // Redirect old /login → /admin-login
+  // if (pathname === '/login') {
+  //   return NextResponse.redirect(new URL(ROUTES.admin.login, request.url));
   // }
-     console.log('=== MIDDLEWARE END ===');
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/login',
-    '/dashboard'
-  ],
+  matcher: ['/login', '/protected/admin-:path*'],
 };

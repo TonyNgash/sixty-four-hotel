@@ -1,55 +1,20 @@
-// Navigation configuration - shared between sidebar and mobile
-import { 
-  HomeIcon, 
-  BuildingOfficeIcon, 
-  UsersIcon, 
-  CalendarIcon, 
+'use client';
+
+import {
+  HomeIcon,
+  KeyIcon,
+  CalendarIcon,
+  UsersIcon,
   CurrencyDollarIcon,
-  Cog6ToothIcon 
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
+import { ROUTES } from '@/lib/constants/routes';
 
-export interface NavItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  current: boolean;
-}
-
-export const navigation: NavItem[] = [
-  { 
-    name: 'Dashboard', 
-    href: '/dashboard', 
-    icon: HomeIcon, 
-    current: true 
-  },
-  { 
-    name: 'Rooms', 
-    href: '/rooms', 
-    icon: BuildingOfficeIcon, 
-    current: false 
-  },
-  { 
-    name: 'Staff', 
-    href: '/staff', 
-    icon: UsersIcon, 
-    current: false 
-  },
-  { 
-    name: 'Bookings', 
-    href: '/bookings', 
-    icon: CalendarIcon, 
-    current: false 
-  },
-  { 
-    name: 'Revenue', 
-    href: '/revenue', 
-    icon: CurrencyDollarIcon, 
-    current: false 
-  },
-  { 
-    name: 'Settings', 
-    href: '/settings', 
-    icon: Cog6ToothIcon, 
-    current: false 
-  },
-];
+export const navigation = [
+  { name: 'Dashboard', href: ROUTES.admin.dashboard, icon: HomeIcon },
+  { name: 'Rooms', href: ROUTES.admin.rooms, icon: KeyIcon },
+  { name: 'Bookings', href: ROUTES.admin.bookings, icon: CalendarIcon },
+  { name: 'Staff', href: ROUTES.admin.staff, icon: UsersIcon },
+  { name: 'Revenue', href: ROUTES.admin.revenue, icon: CurrencyDollarIcon },
+  { name: 'Settings', href: ROUTES.admin.settings, icon: Cog6ToothIcon },
+] as const;

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
 import { useRouter } from 'next/navigation'; // ← ADD THIS
+import { ROUTES } from '@/lib/constants/routes';
+
 
 interface LoginState {
   isLoading: boolean;
@@ -27,45 +29,31 @@ export function useLogin() {
 
 
   const handleLogin = async (email: string, password: string) => {
-    console.log('Login attempt started'); // ← DEBUG
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const success = await login(email, password);
-      console.log('Login result:', success)
 
-      // if (!success) {
-      //   // ← DEBUG
-      //   setState(prev => ({...prev,error: 'Invalid email or password',attempts: prev.attempts + 1,}));
-        
-      //   return false;
-      // }
       if (success) {
-        // ← DEBUG
         setState(prev => ({ ...prev, error: null, attempts: 0 }));
-        if (success && isRouterReady) {
-          router.push('/dashboard');
-          return true;
+        if (isRouterReady) {
+          router.push(ROUTES.admin.dashboard); // ← NOW /admin-dashboard
         }
-        
         return true;
       }
-      setState(prev => ({...prev,error: 'Invalid email or password',attempts: prev.attempts + 1,}));
-      return false;
-    } catch (error) {
+
       setState(prev => ({
         ...prev,
-        error: 'Login failed. Please try again.',
+        error: 'Invalid email or password',
         attempts: prev.attempts + 1,
       }));
       return false;
+    } catch (error) {
+      // ... error handling
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
-  return {
-    ...state,
-    handleLogin,
-  };
+  return { ...state, handleLogin };
 }

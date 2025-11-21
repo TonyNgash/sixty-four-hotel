@@ -6,7 +6,6 @@ import { sections } from './home-config/sections-config';
 import HeroSection from '@/components/frontend/home-sections/hero/hero-section';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import type { HomeSectionConfig } from './home-config/sections-config';
 
 export default function HomePage() {
   return (
@@ -17,7 +16,7 @@ export default function HomePage() {
           return <HeroSection key={section.id} {...section.props} />;
         }
 
-        // ── ROOM CATEGORIES: Lazy load ──
+        // ── ROOM CATEGORIES: Lazy load with props ──
         if (section.id === 'room-categories') {
           const LazyRoomCategories = dynamic(
             () => import('@/components/frontend/home-sections/room-categories/room-categories-section'),
@@ -33,7 +32,10 @@ export default function HomePage() {
 
           return (
             <Suspense key={section.id} fallback={null}>
-              <LazyRoomCategories />
+              <LazyRoomCategories
+                title={section.title}
+                subtitle={section.subtitle as string}
+              />
             </Suspense>
           );
         }

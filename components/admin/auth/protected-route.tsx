@@ -3,6 +3,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { ROUTES } from '@/lib/constants/routes';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,10 +15,8 @@ export function ProtectedRoute({ children, requiredRole = 'admin' }: ProtectedRo
   const router = useRouter();
 
   useEffect(() => {
-    console.log('ProtectedRoute useEffect - User:', user, 'Loading:', isLoading); 
     if (!isLoading && (!user || user.role !== requiredRole)) {
-      console.log("we are at protected-route... are you going back to login?");
-      router.push('/login');
+      router.push(ROUTES.admin.login); // ← NOW DYNAMIC
     }
   }, [user, isLoading, requiredRole, router]);
 
@@ -30,9 +29,8 @@ export function ProtectedRoute({ children, requiredRole = 'admin' }: ProtectedRo
   }
 
   if (!user || user.role !== requiredRole) {
-    console.log('ProtectedRoute - No user, not rendering children');
     return null;
   }
-  console.log('ProtectedRoute - Rendering children');
+
   return <>{children}</>;
 }
