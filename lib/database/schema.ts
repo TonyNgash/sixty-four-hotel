@@ -9,23 +9,23 @@ export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   email: text('email').notNull().unique(),
   password_hash: text('password_hash'),
-  role: text('role', { enum: ['customer', 'staff', 'admin'] }).notNull(),
+  role: text('role').notNull().default('customer'),
   first_name: text('first_name'),
   last_name: text('last_name'),
   phone: text('phone').notNull(),
-  email_verified_at: integer('email_verified_at', { mode: 'timestamp' }),
-  phone_verified_at: integer('phone_verified_at', { mode: 'timestamp' }),
+  email_verified_at: integer('email_verified_at'),
+  phone_verified_at: integer('phone_verified_at'),
   verification_token: text('verification_token'),
   reset_token: text('reset_token'),
-  reset_token_expires: integer('reset_token_expires', { mode: 'timestamp' }),
+  reset_token_expires: integer('reset_token_expires'),
   account_status: text('account_status', { 
     enum: ['pending_verification', 'active', 'suspended'] 
   }).notNull(),
   failed_attempts: integer('failed_attempts').default(0),
-  locked_until: integer('locked_until', { mode: 'timestamp' }),
-  last_login_attempt: integer('last_login_attempt', { mode: 'timestamp' }),
-  created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
-  updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
+  locked_until: integer('locked_until'),
+  last_login_attempt: integer('last_login_attempt'),
+  created_at: integer('created_at').default(sql`(strftime('%s','now'))`),
+  updated_at: integer('updated_at').default(sql`(strftime('%s','now'))`),
 });
 
 // Add to your existing schema.ts file
@@ -33,8 +33,8 @@ export const emailVerifications = sqliteTable('email_verifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   user_id: integer('user_id').references(() => users.id),
   token: text('token').notNull(),
-  expires_at: integer('expires_at', { mode: 'timestamp' }).notNull(),
-  created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
+  expires_at: integer('expires_at').notNull(),
+  created_at: integer('created_at').default(sql`(strftime('%s','now'))`),
 });
 
 // Add to your existing schema.ts file
@@ -42,9 +42,9 @@ export const phoneVerifications = sqliteTable('phone_verifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   user_id: integer('user_id').references(() => users.id),
   code: text('code').notNull(), // 6-digit SMS code as text
-  expires_at: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  expires_at: integer('expires_at').notNull(),
   attempts: integer('attempts').default(0), // Failed verification attempts
-  created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
+  created_at: integer('created_at').default(sql`(strftime('%s','now'))`),
 });
 
 // Add to your existing schema.ts file
@@ -72,8 +72,8 @@ export const rooms = sqliteTable('rooms', {
 export const amenities = sqliteTable('amenities', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
-  description: text('description'), // NEW: Added description field
-  icon: text('icon'), // CHANGED: Renamed from icon_url to icon
+  description: text('description'), 
+  icon: text('icon'), 
   created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
 });
 
@@ -104,14 +104,38 @@ export const bookings = sqliteTable('bookings', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   customer_id: integer('customer_id').references(() => users.id),
   room_id: integer('room_id').references(() => rooms.id),
-  check_in_date: integer('check_in_date', { mode: 'timestamp' }).notNull(),
-  check_out_date: integer('check_out_date', { mode: 'timestamp' }).notNull(),
+  check_in_date: text('check_in_date').notNull(),
+  check_out_date: text('check_out_date').notNull(),
   total_amount: integer('total_amount').notNull(),
   status: text('status', { enum: ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'] }).notNull().default('pending'),
   payment_status: text('payment_status', { enum: ['pending', 'paid', 'refunded', 'failed'] }).notNull().default('pending'),
   special_requests: text('special_requests'),
-  created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
-  updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
+  created_at: integer('created_at').default(sql`(strftime('%s','now'))`),
+  updated_at: integer('updated_at').default(sql`(strftime('%s','now'))`),
+});
+
+// ──────────────────────────────────────────────────────────────
+// PAYMENTS TABLE — M-PESA READY
+// ──────────────────────────────────────────────────────────────
+export const payments = sqliteTable('payments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  booking_id: integer('booking_id')
+    .notNull()
+    .references(() => bookings.id, { onDelete: 'cascade' }),
+  amount: integer('amount').notNull(), // in KES (whole numbers only — M-Pesa style)
+  phone_number: text('phone_number').notNull(), // e.g. "2547xxxxxxxx"
+  mpesa_receipt_number: text('mpesa_receipt_number'),
+  transaction_date: integer('transaction_date'),
+  checkout_request_id: text('checkout_request_id'), // Daraja's ID
+  result_code: text('result_code'), // "0" = success
+  result_desc: text('result_desc'),
+  status: text('status', {
+    enum: ['initiated', 'completed', 'failed', 'cancelled'],
+  })
+    .notNull()
+    .default('initiated'),
+  created_at: integer('created_at').default(sql`(strftime('%s','now'))`),
+  updated_at: integer('updated_at').default(sql`(strftime('%s','now'))`),
 });
 
 export const pricingRules = sqliteTable('pricing_rules', {

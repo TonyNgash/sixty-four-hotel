@@ -202,11 +202,11 @@ export default function ViewTypesPage() {
   }));
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         {/* Back Button */}
         <Link 
-          href="/rooms"
+          href="/protected/admin-rooms"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -312,6 +312,6 @@ export default function ViewTypesPage() {
         cancelText={undefined}
         variant={statusModalData.type === 'success' ? 'info' : 'danger'}
       />
-    </AdminLayout>
+    </>
   );
 }

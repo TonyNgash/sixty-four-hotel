@@ -8,7 +8,9 @@ import {
   roomExistsByNumber,
   insertRoomImage,
   deleteRoomImagesByRoomId,
-  getRoomImagesByRoomId
+  getRoomImagesByRoomId,
+  addRoomAmenities,
+  updateRoomAmenities
 } from '@/lib/database/queries/rooms';
 import type { RoomInsert, RoomUpdate } from '@/types/database';
 import {
@@ -17,6 +19,8 @@ import {
   type FileUploadResult
 } from '@/lib/utils/file-upload';
 import type { RoomWithRelations } from '@/types/database';
+import { roomAmenities } from '@/lib/database/schema';
+import { eq } from 'drizzle-orm';
 
 export interface RoomCreateData {
   roomNumber: string;
@@ -134,7 +138,7 @@ export async function createRoomService(data: RoomCreateData): Promise<ServiceRe
       try {
         imageUrls = await processImageUploads(data.images);
       } catch (error) {
-        return { success: false, error: 'Failed to upload images' };
+        return { success: false, error: `Failed to upload images ${error}` };
       }
     }
 
@@ -148,6 +152,12 @@ export async function createRoomService(data: RoomCreateData): Promise<ServiceRe
     };
 
     const newRoom = await createRoom(insertData);
+
+    // i added this but its wrong
+    if (data.amenityIds && data.amenityIds.length > 0) {
+      await addRoomAmenities(newRoom.id, data.amenityIds);
+    }
+    // i added the above but its due for edit
 
     // === INSERT IMAGES ===
         // === INSERT IMAGES WITH FIRST AS PRIMARY ===
@@ -244,6 +254,13 @@ export async function updateRoomService(id: number, data: RoomUpdateData): Promi
     if (!roomWithRelations) {
       return { success: false, error: 'Failed to fetch updated room' };
     }
+
+    // i added this but its wrong
+
+    if (data.amenityIds !== undefined) {
+      await updateRoomAmenities(id, data.amenityIds || []);
+    }
+    //  due for change
 
     return { success: true, data: roomWithRelations };
   } catch (error) {

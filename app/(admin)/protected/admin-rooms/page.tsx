@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AdminLayout } from '@/components/admin/layout/admin-layout';
+// import { AdminLayout } from '@/components/admin/layout/admin-layout';
 import { RoomForm } from '@/components/admin/forms/room-form';
 import { Modal } from '@/components/ui/modal';
 import { ConfirmationModal } from '@/components/shared/confirmation-modal';
@@ -263,7 +263,7 @@ export default function RoomsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={navigateToCategories}
-            className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow text-left group"
+            className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow text-left group cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
@@ -278,7 +278,7 @@ export default function RoomsPage() {
 
           <button
             onClick={navigateToAmenities}
-            className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow text-left group"
+            className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow text-left group cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
@@ -293,7 +293,7 @@ export default function RoomsPage() {
 
           <button
             onClick={navigateToViewTypes}
-            className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow text-left group"
+            className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow text-left group cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">

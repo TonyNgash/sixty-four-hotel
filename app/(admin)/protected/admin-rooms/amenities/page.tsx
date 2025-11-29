@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, ReactElement } from 'react';
-import { AdminLayout } from '@/components/admin/layout/admin-layout';
+// import { AdminLayout } from '@/components/admin/layout/admin-layout';
 import { RoomManagementTable } from '@/components/admin/data-tables/room-management-table';
 import { AmenityForm } from '@/components/admin/forms/amenity-form';
 import { Modal } from '@/components/ui/modal';
@@ -216,11 +216,11 @@ export default function AmenitiesPage() {
   }));
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         {/* Back Button */}
         <Link 
-          href="/rooms"
+          href="/protected/admin-rooms"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -326,6 +326,6 @@ export default function AmenitiesPage() {
         cancelText={undefined}
         variant={statusModalData.type === 'success' ? 'info' : 'danger'}
       />
-    </AdminLayout>
+    </>
   );
 }

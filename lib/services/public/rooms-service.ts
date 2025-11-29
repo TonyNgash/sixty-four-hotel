@@ -124,12 +124,22 @@ export async function getRoomDetailById(roomId: number): Promise<PublicRoomDetai
 
   // 3. Get amenities
   const amenityRows = await db
-    .select({ name: amenities.name })
+    .select({
+      name: amenities.name,
+      icon: amenities.icon,
+      description: amenities.description,
+    })
     .from(roomAmenities)
     .innerJoin(amenities, eq(roomAmenities.amenity_id, amenities.id))
     .where(eq(roomAmenities.room_id, roomId));
 
-  const amenityNames = amenityRows.map((row) => row.name).filter(Boolean);
+  const amenitiesList = amenityRows
+    .filter((row) => row.name)
+    .map((row) => ({
+      name: row.name!,
+      icon: row.icon ?? '',           // empty string = fallback to dot later
+      description: row.description ?? '',
+    }));
 
   // Primary image with fallback
   const primaryImage =
@@ -157,6 +167,6 @@ export async function getRoomDetailById(roomId: number): Promise<PublicRoomDetai
     view: data.viewName ?? 'Garden View',
     primaryImageUrl: primaryImage,
     gallery,
-    amenities: amenityNames,
+    amenities: amenitiesList,
   };
 }

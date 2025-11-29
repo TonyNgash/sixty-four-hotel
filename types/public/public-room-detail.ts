@@ -12,5 +12,9 @@ export interface PublicRoomDetail {
   view?: string;
   primaryImageUrl: string;
   gallery: string[]; // all images (including primary)
-  amenities: string[];
+  amenities: {
+    name: string;
+    icon: string;
+    description: string;
+  }[];
 }

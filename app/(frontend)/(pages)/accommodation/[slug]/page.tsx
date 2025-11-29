@@ -13,7 +13,8 @@ interface Params {
 }
 
 export async function generateMetadata({ params }: { params: Params }) {
-  const { category } = await getRoomsByCategorySlug(params.slug);
+  const { slug } = await params;
+  const { category } = await getRoomsByCategorySlug(slug);
   if (!category) return { title: 'Category Not Found' };
 
   return {
@@ -23,7 +24,9 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function CategoryPage({ params }: { params: Params }) {
-  const { category, rooms } = await getRoomsByCategorySlug(params.slug);
+  const { slug } = await params;
+  // const { category, rooms } = await getRoomsByCategorySlug(params.slug);
+  const { category, rooms } = await getRoomsByCategorySlug(slug);
 
   if (!category) {
     notFound();

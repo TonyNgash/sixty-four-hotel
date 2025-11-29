@@ -14,17 +14,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return compare(password, hashedPassword);
 }
 
-// JWT utilities
-// export function generateToken(user: User): string {
-//   const payload: JWTPayload = {
-//     userId: user.id,
-//     email: user.email,
-//     role: user.role,
-//   };
-//    return jwt.sign(payload, authConfig.jwtSecret, {
-//     expiresIn: authConfig.jwtExpiresIn,
-//   });
-// }
+
     export async function generateToken(user: User): Promise<string> {
       const secret = new TextEncoder().encode(authConfig.jwtSecret);
       
@@ -41,20 +31,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
       return token;
     }
 
-// export function verifyToken(token: string): JWTPayload {
-//   try{
-//     console.log('Verifying token:', token.substring(0, 20) + '...');
-//     const decoded  = jwt.verify(token, authConfig.jwtSecret) as JWTPayload;
-//     console.log('Token verified successfully:', decoded);
-//     return decoded ;
-//   }catch(error){
-//     console.error('JWT Verification FAILED:');
-//     console.error('Token:', token);
-//     console.error('Error:', error);
-//     console.error('JWT Secret length:', authConfig.jwtSecret?.length);
-//     throw error;
-//   }
-// }
+
 export async function verifyToken(token: string): Promise<JWTPayload> {
   try {
     const secret = new TextEncoder().encode(authConfig.jwtSecret);
