@@ -2,7 +2,9 @@ import { db } from '@/lib/database';
 import { inArray } from 'drizzle-orm';
 import { amenities, roomCategories, rooms, viewTypes } from '@/lib/database/schema';
 import { roomAmenities, roomImages } from '@/lib/database/schema';
-import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
+import { getRoomImagesByRoomId } from '@/lib/database/queries/rooms';
+import { deleteRoomImage } from '@/lib/utils/file-upload';
+import type { Room, RoomImage } from '@/types/database';
 
 // Define the tables that support bulk delete
 export type BulkDeleteTable = 
@@ -95,7 +97,7 @@ function validateBulkDeleteRequest(
 export async function performBulkDelete(
   tableName: BulkDeleteTableName,
   ids: number[]
-): Promise<BulkDeleteResult> {
+): Promise<BulkDeleteResult & {imageUrls?: string[] }> {
   // Validate input
   const validation = validateBulkDeleteRequest(tableName, ids);
   if (!validation.isValid) {
@@ -111,7 +113,11 @@ export async function performBulkDelete(
   try {
     // SPECIAL CASE: rooms require child deletion first
     if (tableName === 'rooms') {
-      return await deleteRoomsWithRelations(ids);
+      const roomResult = await deleteRoomsWithRelations(ids);
+      return {
+        ...roomResult,
+        imageUrls: roomResult.imageUrls
+      };
     }
 
     // For all other tables (amenities, categories, view-types)
@@ -134,33 +140,62 @@ export async function performBulkDelete(
   }
 }
 
-
+async function cleanupOldImages(imageUrls: string[]): Promise<void> {
+  const deletePromises = imageUrls.map(async (url) => {
+    if (!url || !url.includes('/images/rooms/')) return;
+    const result = await deleteRoomImage(url);
+    if (!result.success) {
+      console.warn('Failed to delete old image:', result.error);
+    }
+  });
+  await Promise.allSettled(deletePromises);
+}
 /**
  * Safely delete rooms and all their relations
  */
-async function deleteRoomsWithRelations(ids: number[]): Promise<BulkDeleteResult> {
-  return await db.transaction(async (tx) => {
+async function deleteRoomsWithRelations(
+  ids: number[]
+): Promise<BulkDeleteResult & { deletedRooms: Room[]; imageUrls: string[] }> {
+
+  //collect image urls before transaction starts 
+  const imageRecordsRaw = await db
+  .select()
+  .from(roomImages)
+  .where(inArray(roomImages.room_id, ids));
+
+  // manually map the raw results to a non-nullable RoomImage type
+  const imageRecords: RoomImage[] = imageRecordsRaw.map(raw => ({
+    id: raw.id,
+    room_id: raw.room_id!,
+    image_url: raw.image_url,
+    alt_text: raw.alt_text,
+    sort_order: raw.sort_order ?? 0,
+    is_primary: raw.is_primary ?? false,
+    created_at: raw.created_at!,
+  }));
+
+  // extract the urls from the records returned
+  const imageUrls = imageRecords.map(img => img.image_url);
+
+  let deletedRooms: Room[] = [];
+  await db.transaction(async (tx) => {
     try {
+      
       // 1. Delete room images
-      await tx
-        .delete(roomImages)
-        .where(inArray(roomImages.room_id, ids));
+      await tx.delete(roomImages).where(inArray(roomImages.room_id, ids));
 
       // 2. Delete room amenities
-      await tx
-        .delete(roomAmenities)
-        .where(inArray(roomAmenities.room_id, ids));
+      await tx.delete(roomAmenities).where(inArray(roomAmenities.room_id, ids));
 
       // 3. Finally delete rooms
-      const result = await tx
-        .delete(rooms)
-        .where(inArray(rooms.id, ids))
-        .returning();
+      const result = await tx.delete(rooms).where(inArray(rooms.id, ids)).returning();
+
+      deletedRooms = result
 
       const deletedCount = result.length;
       console.log(`Bulk delete rooms: Deleted ${deletedCount} rooms and their relations`);
 
-      return { success: true, deletedCount };
+      // return { success: true, deletedCount };
     } catch (error) {
       tx.rollback();
       console.error('Error in room bulk delete transaction:', error);
@@ -171,8 +206,15 @@ async function deleteRoomsWithRelations(ids: number[]): Promise<BulkDeleteResult
       };
     }
   });
+  // if we reach here, the transaction was successful and we can delete physical images
+  return {
+    success:true,
+    deletedCount: deletedRooms.length,
+    deletedRooms: deletedRooms,
+    imageUrls: imageUrls
+  }
+    
 }
-
 
 /**
  * Check if entities exist before deletion (optional pre-validation)

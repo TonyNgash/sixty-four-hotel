@@ -29,10 +29,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    
     const formData = await request.formData();
-
     const roomNumber = formData.get('roomNumber') as string | null;
+    const roomPrice = formData.get('roomPrice') as string | null;
     const categoryId = formData.get('categoryId') as string | null;
     const floor = formData.get('floor') as string | null;
     const viewTypeId = formData.get('viewTypeId') as string | null;
@@ -44,12 +43,11 @@ export async function POST(request: NextRequest) {
     const validImageFiles = imageFiles.filter(
       (f): f is File => f instanceof File && f.size > 0 && f.name !== 'undefined'
     );
-    
 
     // Basic validation
-    if (!roomNumber || !status || !floor) {
+    if (!roomNumber || !roomPrice || !status || !floor) {
       return NextResponse.json(
-        { success: false, error: 'Room number, status, and floor are required' },
+        { success: false, error: 'Room Number Room Price, Status, and Floor are required' },
         { status: 400 }
       );
     }
@@ -63,8 +61,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Build correct data object
+    const roomPriceNum = Number(roomPrice);
     const createData: RoomCreateData = {
       roomNumber: roomNumber.trim(),
+      roomPrice: roomPriceNum,
       categoryId: categoryId ? Number(categoryId) : undefined,
       floor: floorNum,
       viewTypeId: viewTypeId ? Number(viewTypeId) : undefined,
@@ -104,108 +104,111 @@ export async function POST(request: NextRequest) {
 /**
  * Handle FormData (with file uploads)
  */
-async function createRoomWithFormData(formData: FormData) {
-  const roomNumber = formData.get('roomNumber') as string | null;
-  const categoryId = formData.get('categoryId') as string | null;
-  const status = formData.get('status') as string | null;
-  const floor = formData.get('floor') as string | null;
-  const viewTypeId = formData.get('viewTypeId') as string | null;
-  const amenityIds = formData.getAll('amenityIds') as string[];
-  const imageFiles = (formData.getAll('images') as File[]).filter(
-    (f): f is File => f instanceof File && f.size > 0
-  );
+// async function createRoomWithFormData(formData: FormData) {
+//   const roomNumber = formData.get('roomNumber') as string | null;
+//   const roomPrice = formData.get('roomPrice') as string | null;
+//   const categoryId = formData.get('categoryId') as string | null;
+//   const status = formData.get('status') as string | null;
+//   const floor = formData.get('floor') as string | null;
+//   const viewTypeId = formData.get('viewTypeId') as string | null;
+//   const amenityIds = formData.getAll('amenityIds') as string[];
+//   const imageFiles = (formData.getAll('images') as File[]).filter(
+//     (f): f is File => f instanceof File && f.size > 0
+//   );
 
-  if (!roomNumber || !status || !floor) {
-    return NextResponse.json(
-      { success: false, error: 'Missing required fields' },
-      { status: 400 }
-    );
-  }
+//   if (!roomNumber || !roomPrice || !status || !floor) {
+//     return NextResponse.json(
+//       { success: false, error: 'Missing required fields' },
+//       { status: 400 }
+//     );
+//   }
 
-  const floorNum = Number(floor);
-  if (isNaN(floorNum) || floorNum < 1 || floorNum > 100) {
-    return NextResponse.json(
-      { success: false, error: 'Floor must be 1-100' },
-      { status: 400 }
-    );
-  }
+//   const floorNum = Number(floor);
+//   if (isNaN(floorNum) || floorNum < 1 || floorNum > 100) {
+//     return NextResponse.json(
+//       { success: false, error: 'Floor must be 1-100' },
+//       { status: 400 }
+//     );
+//   }
 
-  const validStatuses = ['available', 'occupied', 'maintenance'] as const;
-  type StatusType = typeof validStatuses[number];
-  if (!validStatuses.includes(status as StatusType)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid status' },
-      { status: 400 }
-    );
-  }
+//   const validStatuses = ['available', 'occupied', 'maintenance'] as const;
+//   type StatusType = typeof validStatuses[number];
+//   if (!validStatuses.includes(status as StatusType)) {
+//     return NextResponse.json(
+//       { success: false, error: 'Invalid status' },
+//       { status: 400 }
+//     );
+//   }
 
-  const createData: RoomCreateData = {
-    roomNumber: roomNumber.trim(),
-    categoryId: categoryId ? Number(categoryId) : undefined,
-    status: status as StatusType,
-    floor: floorNum,
-    viewTypeId: viewTypeId ? Number(viewTypeId) : undefined,
-    amenityIds: amenityIds.length > 0 ? amenityIds.map(Number).filter(n => !isNaN(n)) : undefined,
-    images: imageFiles.length > 0 ? imageFiles : undefined,
-  };
+//   const createData: RoomCreateData = {
+//     roomNumber: roomNumber.trim(),
+//     roomPrice: roomPrice.trim(),
+//     categoryId: categoryId ? Number(categoryId) : undefined,
+//     status: status as StatusType,
+//     floor: floorNum,
+//     viewTypeId: viewTypeId ? Number(viewTypeId) : undefined,
+//     amenityIds: amenityIds.length > 0 ? amenityIds.map(Number).filter(n => !isNaN(n)) : undefined,
+//     images: imageFiles.length > 0 ? imageFiles : undefined,
+//   };
 
-  const result = await createRoomService(createData);
-  if (!result.success) {
-    return NextResponse.json({ success: false, error: result.error }, { status: 400 });
-  }
+//   const result = await createRoomService(createData);
+//   if (!result.success) {
+//     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+//   }
 
-  return NextResponse.json(
-    { success: true, data: result.data, message: 'Room created' },
-    { status: 201 }
-  );
-}
+//   return NextResponse.json(
+//     { success: true, data: result.data, message: 'Room created' },
+//     { status: 201 }
+//   );
+// }
 
 /**
  * Handle JSON (no file uploads)
  */
-async function createRoomWithJson(body: Partial<RoomCreateData>) {
-  const { roomNumber, categoryId, status, floor, viewTypeId, amenityIds } = body;
+// async function createRoomWithJson(body: Partial<RoomCreateData>) {
+//   const { roomNumber, roomPrice, categoryId, status, floor, viewTypeId, amenityIds } = body;
 
-  if (!roomNumber || !status || !floor) {
-    return NextResponse.json(
-      { success: false, error: 'Missing required fields' },
-      { status: 400 }
-    );
-  }
+//   if (!roomNumber || !roomPrice || !status || !floor) {
+//     return NextResponse.json(
+//       { success: false, error: 'Missing required fields' },
+//       { status: 400 }
+//     );
+//   }
 
-  const floorNum = Number(floor);
-  if (isNaN(floorNum) || floorNum < 1 || floorNum > 100) {
-    return NextResponse.json(
-      { success: false, error: 'Floor must be 1-100' },
-      { status: 400 }
-    );
-  }
+//   const floorNum = Number(floor);
+//   if (isNaN(floorNum) || floorNum < 1 || floorNum > 100) {
+//     return NextResponse.json(
+//       { success: false, error: 'Floor must be 1-100' },
+//       { status: 400 }
+//     );
+//   }
 
-  const validStatuses = ['available', 'occupied', 'maintenance'] as const;
-  type StatusType = typeof validStatuses[number];
-  if (!validStatuses.includes(status as StatusType)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid status' },
-      { status: 400 }
-    );
-  }
+//   const validStatuses = ['available', 'occupied', 'maintenance'] as const;
+//   type StatusType = typeof validStatuses[number];
+//   if (!validStatuses.includes(status as StatusType)) {
+//     return NextResponse.json(
+//       { success: false, error: 'Invalid status' },
+//       { status: 400 }
+//     );
+//   }
 
-  const createData: RoomCreateData = {
-    roomNumber: roomNumber.trim(),
-    categoryId: categoryId ? Number(categoryId) : undefined,
-    status: status as StatusType,
-    floor: floorNum,
-    viewTypeId: viewTypeId ? Number(viewTypeId) : undefined,
-    amenityIds: amenityIds?.length ? amenityIds.map(Number).filter(n => !isNaN(n)) : undefined,
-  };
+//   const createData: RoomCreateData = {
+//     roomNumber: roomNumber.trim(),
+//     roomPrice: roomPrice.trim(),
+//     categoryId: categoryId ? Number(categoryId) : undefined,
+//     status: status as StatusType,
+//     floor: floorNum,
+//     viewTypeId: viewTypeId ? Number(viewTypeId) : undefined,
+//     amenityIds: amenityIds?.length ? amenityIds.map(Number).filter(n => !isNaN(n)) : undefined,
+//   };
 
-  const result = await createRoomService(createData);
-  if (!result.success) {
-    return NextResponse.json({ success: false, error: result.error }, { status: 400 });
-  }
+//   const result = await createRoomService(createData);
+//   if (!result.success) {
+//     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+//   }
 
-  return NextResponse.json(
-    { success: true, data: result.data, message: 'Room created' },
-    { status: 201 }
-  );
-}
+//   return NextResponse.json(
+//     { success: true, data: result.data, message: 'Room created' },
+//     { status: 201 }
+//   );
+// }

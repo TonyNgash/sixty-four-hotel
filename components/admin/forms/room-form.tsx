@@ -8,15 +8,24 @@ import { useRoomCategories } from '@/hooks/use-room-categories';
 import { useViewTypes } from '@/hooks/use-view-types';
 import { useAmenities } from '@/hooks/use-amenities';
 
+export interface ExistingImage {
+  id: number;
+  url: string;
+  altText: string | null;
+  isPrimary: boolean;
+}
 
 export interface RoomFormData {
   roomNumber: string;
+  roomPrice: string;
   categoryId?: number;
   floor: string;
   viewTypeId?: number;
   status: 'available' | 'occupied' | 'maintenance';
   amenityIds: number[];
-  images: File[];
+  images: File[]; // New image files to upload
+  // CRITICAL FIX: Add the new property here
+  imagesToKeep: number[];
 }
 
 interface RoomFormProps {
@@ -24,6 +33,7 @@ interface RoomFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   initialData?: RoomFormData;
+  initialExistingImages?: ExistingImage[];
   error?: string | null;
   mode?: 'create' | 'edit';
 }
@@ -33,6 +43,7 @@ export function RoomForm({
   onCancel, 
   isSubmitting = false,
   initialData,
+  initialExistingImages = [],
   error,
   mode = 'create'
 }: RoomFormProps) {
@@ -42,14 +53,17 @@ export function RoomForm({
 
   const [formData, setFormData] = useState<RoomFormData>({
     roomNumber: '',
+    roomPrice: '',
     categoryId: undefined,
     floor: '',
     viewTypeId: undefined,
     status: 'available',
     amenityIds: [],
     images: [],
+    imagesToKeep: []
   });
 
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>(initialExistingImages);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,12 +71,23 @@ export function RoomForm({
   // Initialize form with initialData when it changes
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        ...initialData,
+        images: [],
+      });
       // Note: For edit mode with existing images, we'd need to handle image URLs differently
     }
-  }, [initialData]);
+    if(initialExistingImages.length > 0){
+      setExistingImages(initialExistingImages);
+      setImagePreviews(initialExistingImages.map(img => img.url));
+    }
+    return () => {
+
+    }
+  }, [initialData, initialExistingImages]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
@@ -70,6 +95,8 @@ export function RoomForm({
     const validFiles: File[] = [];
 
     files.forEach((file) => {
+
+
       // Validate file type
       if (!file.type.startsWith('image/')) {
         newErrors.push(`Invalid file type: ${file.name}. Please select image files only.`);
@@ -83,10 +110,15 @@ export function RoomForm({
       }
 
       // Validate total number of images
-      if (formData.images.length + validFiles.length >= 10) {
-        newErrors.push('Maximum 10 images allowed');
+      if(existingImages.length + formData.images.length + validFiles.length >= 10){
+        newErrors.push("Maximum 10 images allowed");
         return;
       }
+
+      // if (formData.images.length + validFiles.length >= 10) {
+      //   newErrors.push('Maximum 10 images allowed');
+      //   return;
+      // }
 
       validFiles.push(file);
     });
@@ -119,10 +151,16 @@ export function RoomForm({
   };
 
   const handleRemoveImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
+    const existingCount = existingImages.length;
+    if (index < existingCount){
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    }else{
+      const fileIndex = index - existingCount;
+      setFormData(prev => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== fileIndex)
+      }));
+    }
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -136,20 +174,22 @@ export function RoomForm({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log('handleSubmit() has been triggered: room-form 139');
     e.preventDefault();
     setFormError(null);
 
-    
-
     // Basic client-side validation
-    if (!formData.roomNumber.trim()) {
+    if (!formData.roomNumber.toString().trim()) {
       setFormError('Room number is required room-form:145');
       return;
     }
 
     if (!formData.categoryId) {
       setFormError('Category is required');
+      return;
+    }
+
+    if (!formData.roomPrice || Number(formData.roomPrice) <= 0) {
+      setFormError('Room Price must be a positive number');
       return;
     }
 
@@ -168,15 +208,17 @@ export function RoomForm({
       setFormError('At least one room image is required');
       return;
     }
-    //this will never run since html is taking care of the required input fields
-    console.log('Validation is complete: room-form 169');
-    
-    console.log('FORM DATA BEFORE onSubmit:', {
-      imagesCount: formData.images.length,
-      firstImage: formData.images[0]?.name,
-      isFile: formData.images[0] instanceof File,
-    });
-    onSubmit(formData);
+
+    // 1. Extract IDs of all remaining existing images
+    const keptImageIds = existingImages.map(img => img.id);
+
+    // 2. Prepare the final submission data object
+    const submissionData: RoomFormData = {
+      ...formData,
+      //CRITICAL FIX: Include the array of image IDx to keep
+      imagesToKeep: keptImageIds,
+    }
+    onSubmit(submissionData);
   };
 
   const displayError = error || formError || categoriesError || viewTypesError || amenitiesError;
@@ -215,6 +257,26 @@ export function RoomForm({
           placeholder="e.g., 101, 202"
           disabled={isSubmitting}
         />
+      </div>
+
+      <div>
+        <div>
+          <label htmlFor="roomPrice" className="block text-sm font-medium text-gray-700 mb-2">
+            Room Price (KSh) *
+          </label>
+          <input
+            type="number"
+            id="roomPrice"
+            required
+            min="0"
+            step="1"
+            value={formData.roomPrice}
+            onChange={(e) => setFormData(prev => ({ ...prev, roomPrice: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="e.g., 12000"
+            disabled={isSubmitting}
+          />
+        </div>
       </div>
 
       {/* Category and Floor */}
@@ -341,8 +403,17 @@ export function RoomForm({
               Selected images ({imagePreviews.length}/10)
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {imagePreviews.map((preview, index) => (
-                <div key={index} className="relative group">
+              {imagePreviews.map((preview, index) => {
+                const isExisting = index < existingImages.length;
+                const existingSource = isExisting ? existingImages[index] : null;
+                const newFileSource = !isExisting ? formData.images[index - existingImages.length]: null;
+
+                const label = isExisting ? `Existing image (ID: ${existingSource?.id})` : newFileSource?.name;
+
+                const key = isExisting ? `existing-${existingSource?.id}` : `new-${index}`;
+
+              return(
+                <div key={key} className="relative group">
                   <div className="h-24 w-full relative rounded-lg border border-gray-300 overflow-hidden">
                     <Image 
                       src={preview} 
@@ -361,10 +432,11 @@ export function RoomForm({
                     <XMarkIcon className="h-3 w-3" />
                   </button>
                   <p className="text-xs text-gray-500 mt-1 truncate">
-                    {formData.images[index]?.name}
+                    {label}
                   </p>
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
         )}

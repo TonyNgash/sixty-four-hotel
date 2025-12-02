@@ -25,15 +25,7 @@ interface RoomManagementTableProps<T extends BaseTableItem> {
   onBulkDelete: (selectedIds: number[]) => void;
 }
 
-export function RoomManagementTable<T extends BaseTableItem>({
-  title,
-  data,
-  columns,
-  onAddNew,
-  onEdit,
-  onDelete,
-  onBulkDelete,
-}: RoomManagementTableProps<T>) {
+export function RoomManagementTable<T extends BaseTableItem>({title, data, columns, onAddNew, onEdit, onDelete, onBulkDelete, }: RoomManagementTableProps<T>) {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   const toggleItemSelection = (itemId: number) => {
@@ -67,18 +59,12 @@ export function RoomManagementTable<T extends BaseTableItem>({
         
         <div className="flex gap-2">
           {selectedItems.length > 0 && (
-            <button 
-              onClick={handleBulkDelete}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
+            <button  onClick={handleBulkDelete} className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
               <TrashIcon className="h-4 w-4" />
               Delete Selected ({selectedItems.length})
             </button>
           )}
-          <button 
-            onClick={onAddNew}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
+          <button onClick={onAddNew} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             Add New {title.slice(0, -1)}
           </button>
         </div>
@@ -91,19 +77,10 @@ export function RoomManagementTable<T extends BaseTableItem>({
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="relative w-12 px-6 sm:w-16 sm:px-8">
-                  <input
-                    type="checkbox"
-                    className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    checked={selectedItems.length === data.length && data.length > 0}
-                    onChange={selectAllItems}
-                  />
+                  <input type="checkbox" className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked={selectedItems.length === data.length && data.length > 0} onChange={selectAllItems} />
                 </th>
                 {columns.map((column) => (
-                  <th 
-                    key={column.key as string}
-                    scope="col" 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
+                  <th  key={column.key as string} scope="col"  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" >
                     {column.label}
                   </th>
                 ))}

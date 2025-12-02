@@ -4,7 +4,6 @@ export interface PublicRoomCategory {
   name: string;
   description: string;
   slug: string;
-  imageUrl: string;
-  basePrice: number;    // in dollars (e.g., 8500 cents → 85.00)
+  imageUrl: string; // in dollars (e.g., 8500 cents → 85.00)
   capacity: number;     // max_occupancy
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `room_categories` DROP COLUMN `base_price`;

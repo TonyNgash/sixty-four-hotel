@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils/cn';
 interface RoomCategoryFormData {
   name: string;
   description: string;
-  basePrice: string;
+  // basePrice: string;
   maxOccupancy: string;
   featuredImage?: File;
   featuredImageUrl?: string;
@@ -36,7 +36,7 @@ export function RoomCategoryForm({
   const [formData, setFormData] = useState<RoomCategoryFormData>({
     name: '',
     description: '',
-    basePrice: '',
+    // basePrice: '',
     maxOccupancy: '',
   });
 
@@ -99,10 +99,11 @@ export function RoomCategoryForm({
       return;
     }
 
-    if (!formData.basePrice || Number(formData.basePrice) <= 0) {
-      setFormError('Base price must be a positive number');
-      return;
-    }
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+    // if (!formData.basePrice || Number(formData.basePrice) <= 0) {
+    //   setFormError('Base price must be a positive number');
+    //   return;
+    // }
 
     if (!formData.maxOccupancy || Number(formData.maxOccupancy) < 1) {
       setFormError('Max occupancy must be at least 1');
@@ -168,7 +169,7 @@ export function RoomCategoryForm({
 
       {/* Base Price and Max Occupancy */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+        {/* <div>
           <label htmlFor="basePrice" className="block text-sm font-medium text-gray-700 mb-2">
             Base Price (KSh) *
           </label>
@@ -184,7 +185,7 @@ export function RoomCategoryForm({
             placeholder="e.g., 12000"
             disabled={isSubmitting}
           />
-        </div>
+        </div> */}
         <div>
           <label htmlFor="maxOccupancy" className="block text-sm font-medium text-gray-700 mb-2">
             Max Occupancy *

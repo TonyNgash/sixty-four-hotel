@@ -18,7 +18,6 @@ export type RoomCategoryDeleteResponse = ApiResponse;
 export interface RoomCategoryCreateRequest {
   name: string;
   description?: string;
-  basePrice: number;
   maxOccupancy: number;
   featuredImageUrl?: string;
 }
@@ -26,7 +25,9 @@ export interface RoomCategoryCreateRequest {
 export interface RoomCategoryUpdateRequest {
   name?: string;
   description?: string;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   basePrice?: number;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   maxOccupancy?: number;
   featuredImageUrl?: string;
 }
@@ -137,6 +138,7 @@ export interface RoomUpdateRequest {
 
 export interface RoomCreateData {
   roomNumber: string;
+  roomPrice: string;
   categoryId?: number;
   status: 'available' | 'occupied' | 'maintenance';
   floor: number;
@@ -146,11 +148,13 @@ export interface RoomCreateData {
 
 export interface RoomUpdateData {
   roomNumber?: string;
+  roomPrice: string;
   categoryId?: number | null;
   status?: 'available' | 'occupied' | 'maintenance';
   floor?: number;
   viewTypeId?: number | null;
   amenityIds?: number[];
+  imagesToKeep:number[];
 }
 
 // Extended types for FormData file uploads for rooms

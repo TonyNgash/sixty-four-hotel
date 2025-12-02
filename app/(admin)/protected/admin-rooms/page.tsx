@@ -6,35 +6,45 @@ import { RoomForm } from '@/components/admin/forms/room-form';
 import { Modal } from '@/components/ui/modal';
 import { ConfirmationModal } from '@/components/shared/confirmation-modal';
 import { useRooms } from '@/hooks/use-rooms';
-import { useRoomCategories } from '@/hooks/use-room-categories';
-import { useViewTypes } from '@/hooks/use-view-types';
-import { useAmenities } from '@/hooks/use-amenities';
+// import { useRoomCategories } from '@/hooks/use-room-categories';
+// import { useViewTypes } from '@/hooks/use-view-types';
+// import { useAmenities } from '@/hooks/use-amenities';
 import { 
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
-  EyeIcon,
   BuildingOfficeIcon,
   Cog6ToothIcon,
   TagIcon,
   ViewfinderCircleIcon
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils/cn';
-import Link from 'next/link';
 import type { RoomFormData } from '@/components/admin/forms/room-form';
+// import { updateRoom } from '@/lib/database/queries/rooms';
 
 // Define proper TypeScript interfaces
 interface Room {
   id: number;
   roomNumber: string;
+  roomPrice: number;
   category: string;
   status: 'available' | 'occupied' | 'maintenance';
   floor: number;
   viewType: string;
-  basePrice: number;
   amenities: string[];
   lastCleaned: string;
+  category_id: number | null;
+  view_type_id: number | null;
+  amenityIds: number[];
+  existingImages:{
+    id: number;
+    url: string;
+    altText: string | null;
+    isPrimary: boolean;
+  }[];
 }
+
+
 
 const statusColors = {
   available: 'bg-green-100 text-green-800',
@@ -48,14 +58,16 @@ export default function RoomsPage() {
     loading, 
     error, 
     createRoom, 
+    updateRoom,
     bulkDeleteRooms,
     refetch 
   } = useRooms();
 
-  const { categories: roomCategories } = useRoomCategories();
-  const { viewTypes } = useViewTypes();
-  const { amenities } = useAmenities();
+  // const { categories: roomCategories } = useRoomCategories();
+  // const { viewTypes } = useViewTypes();
+  // const { amenities } = useAmenities();
 
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [selectedRooms, setSelectedRooms] = useState<number[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRoomForm, setShowRoomForm] = useState(false);
@@ -69,21 +81,38 @@ export default function RoomsPage() {
   }>({ type: 'success', title: '', message: '' });
 
   const handleAddNew = () => {
+    setEditingRoom(null);
     setShowRoomForm(true);
     setSubmitError(null);
   };
+
+  const handleEdit = (room: Room)=>{
+    setEditingRoom(room);
+    setShowRoomForm(true);
+    setSubmitError(null);
+  }
 
   // Transform API data to match existing interface
   const rooms: Room[] = apiRooms.map(room => ({
     id: room.id,
     roomNumber: room.room_number,
+    roomPrice: room.room_price ?? 0,
     category: room.category?.name || 'Uncategorized',
     status: room.status,
     floor: room.floor,
     viewType: room.viewType?.name || 'No View',
-    basePrice: room.category?.base_price || 0,
     amenities: room.amenities?.map(a => a.name) || [],
-    lastCleaned: room.created_at ? new Date(room.created_at).toISOString().split('T')[0] : 'N/A'
+    lastCleaned: room.created_at ? new Date(room.created_at).toISOString().split('T')[0] : 'N/A',
+    category_id: room.category_id,
+    view_type_id: room.view_type_id,
+    amenityIds: room.amenities?.map(a => a.id) || [],
+
+    existingImages: room.images?.map(img => ({
+      id: img.id,
+      url: img.image_url,
+      altText: img.alt_text,
+      isPrimary: img.is_primary,
+    })) || []
   }));
 
   const toggleRoomSelection = (roomId: number) => {
@@ -135,14 +164,18 @@ export default function RoomsPage() {
   };
 
   const handleRoomSubmit = async (roomData: RoomFormData) => {
-    
     setIsSubmitting(true);
     setSubmitError(null);
+
+    const mode = editingRoom ? 'update' : 'create';
+    const roomId = editingRoom?.id;
     
     try {
       // Transform form data to API format - NOW USING IDs DIRECTLY
       const createData = {
+        // ...(mode === 'update' && {id: roomId}),
         roomNumber: roomData.roomNumber,
+        roomPrice: roomData.roomPrice,
         status: roomData.status,
         floor: parseInt(roomData.floor),
         categoryId: roomData.categoryId,
@@ -151,26 +184,50 @@ export default function RoomsPage() {
         images: roomData.images,
       };
 
-      const result = await createRoom(createData);
+      // const result = await createRoom(createData);
+      let result : {success: boolean; error?: string };
+
+      if(mode === 'create'){
+        result = await createRoom({
+          ...createData,
+          images: roomData.images,
+        });
+      }else{
+        if(!roomId){
+          setSubmitError("Room ID is missing for update operaton.");
+          result = { success: false, error: "Missing ID"};
+        }else{
+          result = await updateRoom(roomId, {
+            ...createData,
+            images: roomData.images,
+            //CRITICAL FIX: Include the array of image URLs to keep
+            imagesToKeep: roomData.imagesToKeep,
+          });
+        }
+      }
 
       if (!result.success) {
-        setSubmitError(result.error || 'Failed to create room page.tsx:156');
+        setSubmitError(result.error || `Failed to ${mode} room`);
       } else {
         setStatusModalData({
           type: 'success',
           title: 'Success',
-          message: 'Room created successfully! page.tsx',
+          message: `Room ${mode === 'create' ? 'created' : 'updated'} successfully`,
         });
         setShowRoomForm(false);
+        setEditingRoom(null);
         setShowStatusModal(true);
+        refetch();
       }
     } catch (error) {
-      console.error('Error creating room page.tsx:167', error);
+      console.error(`Error ${mode} room`, error);
       setSubmitError('An unexpected error occurred page.tsx');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  
 
   // Use Link components for navigation instead of window.location
   const navigateToCategories = () => {
@@ -382,7 +439,7 @@ export default function RoomsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{room.category}</div>
-                        <div className="text-sm text-gray-500">KSh {room.basePrice.toLocaleString()}/night</div>
+                        <div className="text-sm text-gray-500">KSh {room.roomPrice.toLocaleString()}/night</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={cn(
@@ -397,7 +454,7 @@ export default function RoomsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
-                          <button className="text-green-600 hover:text-green-900 p-1">
+                          <button onClick={()=> handleEdit(room)} className="text-green-600 hover:text-green-900 p-1">
                             <PencilIcon className="h-4 w-4" />
                           </button>
                           <button 
@@ -441,19 +498,33 @@ export default function RoomsPage() {
       {/* Room Form Modal */}
       <Modal
         isOpen={showRoomForm}
-        onClose={() => setShowRoomForm(false)}
-        title="Add New Room"
+        onClose={() => {
+          setShowRoomForm(false);
+          setEditingRoom(null);
+        }}
+        title={editingRoom ? `Edit Room ${editingRoom.roomNumber}` : "Add New Room"}
         size="lg"
       >
         <RoomForm
           onSubmit={handleRoomSubmit}
-          onCancel={() => setShowRoomForm(false)}
+          onCancel={() => {
+            setShowRoomForm(false);
+            setEditingRoom(null);
+          }}
           isSubmitting={isSubmitting}
           error={submitError}
-          mode="create"
-          // roomCategories={roomCategories}
-          // viewTypes={viewTypes}
-          // amenities={amenities}
+          mode={editingRoom ? "edit" : "create"}
+          initialData={editingRoom ? ({
+            roomNumber: editingRoom.roomNumber,
+            roomPrice:editingRoom.roomPrice.toString(),
+            floor:editingRoom.floor.toString(),
+            status:editingRoom.status,
+            categoryId: editingRoom.category_id,
+            viewTypeId:editingRoom.view_type_id,
+            amenityIds:editingRoom.amenityIds,
+            images:[],
+          } as RoomFormData): undefined}
+          initialExistingImages={editingRoom?.existingImages}
         />
       </Modal>
 

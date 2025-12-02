@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRoomByIdService, updateRoomService, deleteRoomService } from '@/lib/services/room-service';
+import { updateRoomService, getRoomByIdService, deleteRoomService } from '@/lib/services/room-service';
 import type { RoomUpdateData } from '@/lib/services/room-service';
 import type { ApiResponse } from '@/types/api';
 
@@ -9,6 +9,11 @@ interface RouteParams {
   };
 }
 
+// Define valid statuses and StatusType globally within the file for proper scope
+const validStatuses = ['available', 'occupied', 'maintenance'] as const;
+type StatusType = typeof validStatuses[number];
+
+type JsonUpdateBody = RoomUpdateData & {images?: File[]; imagesToKeep?: string[] };
 /**
  * GET /api/rooms/[id]
  * Get room by ID with relationships
@@ -50,98 +55,126 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-
+/**
+ * * PUT /api/rooms/[id]
+* Update a room's details (including images and amenities)
+*/
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const id = parseInt(params.id, 10);
+  const awaitedParams = await params;
+  const id = parseInt(awaitedParams.id, 10);
   if (isNaN(id) || id < 1) {
     return NextResponse.json({ success: false, error: 'Invalid room ID' }, { status: 400 });
   }
 
+  const contentType = request.headers.get('content-type') || '';
+  let parsedData: Partial<RoomUpdateData> = {};
+  let imageFiles: File[] = [];
+  let imageUrlsToKeep: string[] | undefined = undefined;// New field for existing images
+
   try {
-    const formData = await request.formData();
+    if(contentType.includes('multipart/form-data')){
+      // path 1: multipart form data client sent files
+      const formData = await request.formData();
+      const roomNumber = getString(formData, 'roomNumber');
+      const roomPrice = getString(formData, 'roomPrice');
+      const status = getString(formData, 'status');
+      const floorStr = getString(formData, 'floor');
+      const categoryIdStr = getString(formData, 'categoryId');
+      const viewTypeIdStr = getString(formData, 'viewTypeId');
+      const amenityIdStr = formData.getAll('amenityIds') as string[];
 
-    const roomNumber = getString(formData, 'roomNumber');
-    const status = getString(formData, 'status');
-    const floorStr = getString(formData, 'floor');
-    const categoryIdStr = getString(formData, 'categoryId');
-    const viewTypeIdStr = getString(formData, 'viewTypeId');
-    const amenityIdStrs = formData.getAll('amenityIds') as string[];
-    const imageFiles = getFiles(formData, 'images');
+      	// NEW: Get array of existing image URLs to keep
+      const imageUrlsToKeepStr = formData.getAll('imagesToKeep') as string[];
 
-    // At least one field
-    if (
-      !roomNumber &&
-      !status &&
-      !floorStr &&
-      !categoryIdStr &&
-      !viewTypeIdStr &&
-      amenityIdStrs.length === 0 &&
-      imageFiles.length === 0
-    ) {
-      return NextResponse.json(
-        { success: false, error: 'At least one field required' },
-        { status: 400 }
-      );
-    }
+      // extract images separately 
+      imageFiles = getFiles(formData, 'images');
 
-    let floor: number | undefined;
-    if (floorStr) {
-      floor = parseInt(floorStr, 10);
-      if (isNaN(floor) || floor < 1 || floor > 100) {
-        return NextResponse.json(
-          { success: false, error: 'Floor must be 1–100' },
-          { status: 400 }
-        );
+      // setup up parsed data based on form data extraction logic
+      parsedData = {
+        ...(roomNumber && { roomNumber: roomNumber.trim() }),
+        // roomPrice is passed as string and parsed to number in service
+        ...(roomPrice && { roomPrice: roomPrice.trim() }),
+        ...(status && { status: status as StatusType }),
+      };
+
+      // set the imagesToKeepArray 
+      if(imageUrlsToKeepStr.length > 0){
+        imageUrlsToKeep = imageUrlsToKeepStr.filter(url => url.trim() !== '');
+      } else if (formData.has('imagesToKeep') && imageFiles.length === 0){
+        // If the field was present but empty (e.g., removing the last image)
+        imageUrlsToKeep = [];
       }
+
+      // parse numeric fields from strings
+      const floor = floorStr ? parseInt(floorStr, 10) : undefined;
+      if(floor !== undefined && !isNaN(floor)) parsedData.floor = floor;
+
+      const categoryId = categoryIdStr 
+          ? categoryIdStr === 'null' ? null: parseInt(categoryIdStr, 10)
+          : undefined;
+      if (categoryId !== undefined) parsedData.categoryId = categoryId;
+
+      const viewTypeId = viewTypeIdStr 
+          ? viewTypeIdStr === 'null' ? null : parseInt(viewTypeIdStr, 10) 
+          : undefined;
+      if (viewTypeId !== undefined) parsedData.viewTypeId = viewTypeId;
+
+      const amenityIds = amenityIdStr
+          .map(id => parseInt(id, 10))
+          .filter(id => !isNaN(id) && id > 0);
+      if(amenityIds.length > 0) parsedData.amenityIds = amenityIds;
+
+    } else if(contentType.includes('application/json')){
+        //path 2: application/json (client send data only)
+        const jsonBody: JsonUpdateBody = await request.json();
+        parsedData = { ...jsonBody } as Partial<RoomUpdateData>;
+        imageUrlsToKeep = jsonBody.imagesToKeep;// Assuming client sends imagesToKeep in JSON too
+
+    }else{
+        return NextResponse.json(
+          {success: false, error: "Unsupported content type for PUT request"},
+          {status: 400}
+        );
     }
 
-    const validStatuses = ['available', 'occupied', 'maintenance'] as const;
-    type StatusType = typeof validStatuses[number];
-    if (status && !validStatuses.includes(status as StatusType)) {
+    // Check if any data was provided
+    const hasData = Object.keys(parsedData).some(key => {
+      const val = parsedData[key as keyof RoomUpdateData];
+      return val !== undefined && val !== null;
+    }) || imageFiles.length > 0 || imageUrlsToKeep !== undefined;
+
+    if (!hasData){
       return NextResponse.json(
-        { success: false, error: 'Invalid status' },
-        { status: 400 }
+        {success: false, error: 'At least one field or image operation required'},
+        {status: 400}
+      )
+    }
+
+    // validate status
+    if(parsedData.status && !validStatuses.includes(parsedData.status as StatusType)){
+      return NextResponse.json(
+        {success: false, error: 'Invalid status'},
+        {status: 400}
       );
     }
 
-    const categoryId = categoryIdStr
-      ? categoryIdStr === 'null'
-        ? null
-        : parseInt(categoryIdStr, 10)
-      : undefined;
-    if (categoryIdStr && categoryIdStr !== 'null' && (isNaN(categoryId!) || categoryId! < 1)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid categoryId' },
-        { status: 400 }
-      );
-    }
-
-    const viewTypeId = viewTypeIdStr
-      ? viewTypeIdStr === 'null'
-        ? null
-        : parseInt(viewTypeIdStr, 10)
-      : undefined;
-    if (viewTypeIdStr && viewTypeIdStr !== 'null' && (isNaN(viewTypeId!) || viewTypeId! < 1)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid viewTypeId' },
-        { status: 400 }
-      );
-    }
-
-    const amenityIds = amenityIdStrs
-      .map(id => parseInt(id, 10))
-      .filter(id => !isNaN(id) && id > 0);
-
+    // final object passed to service
     const updateData: RoomUpdateData = {
-      ...(roomNumber && { roomNumber: roomNumber.trim() }),
-      ...(status && { status: status as StatusType }),
-      ...(floor && { floor }),
-      ...(categoryId !== undefined && { categoryId }),
-      ...(viewTypeId !== undefined && { viewTypeId }),
-      ...(amenityIds.length > 0 && { amenityIds }),
-      ...(imageFiles.length > 0 && { images: imageFiles }),
-    };
+      ...parsedData,
+      // Only include imagesToKeep if it was explicitly defined by the client
+      ...(imageUrlsToKeep !== undefined && {imageUrlsToKeep: imageUrlsToKeep}),
+      ...(imageFiles.length > 0 && {images: imageFiles}),
+    } as RoomUpdateData;
 
+    // START OF NEW LOGGING BLOCK
+    console.log('--- API Route Log: Room Update ---');
+    console.log(`Room ID: ${id}`);
+    console.log('Images received for upload:', imageFiles.length);
+    // CRITICAL CHECK: What URLs did the client tell us to KEEP?
+    console.log('Image URLs received to KEEP:', imageUrlsToKeep);
+    console.log('--- End API Route Log ---');
+    // END OF NEW LOGGING BLOCK
+    
     const result = await updateRoomService(id, updateData);
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
@@ -172,194 +205,6 @@ function getFiles(formData: FormData, key: string): File[] {
   return (formData.getAll(key) as File[]).filter(
     (f): f is File => f instanceof File && f.size > 0 && f.name !== ''
   );
-}
-
-/**
- * Handle FormData request with file uploads for room update
- */
-/**
- * Handle FormData request with file uploads for room update
- */
-/**
- * Handle FormData request with file uploads for room update
- */
-async function handleFormDataRequest(formData: FormData, id: number) {
-  try {
-    const roomNumber = formData.get('roomNumber') as string | null;
-    const categoryId = formData.get('categoryId') as string | null;
-    const status = formData.get('status') as string | null;
-    const floor = formData.get('floor') as string | null;
-    const viewTypeId = formData.get('viewTypeId') as string | null;
-    const amenityIds = formData.getAll('amenityIds') as string[];
-    const imageFiles = (formData.getAll('images') as File[]).filter(
-      (f): f is File => f instanceof File && f.size > 0
-    );
-
-    // Validate at least one field
-    if (
-      roomNumber === null &&
-      categoryId === null &&
-      status === null &&
-      floor === null &&
-      viewTypeId === null &&
-      amenityIds.length === 0 &&
-      imageFiles.length === 0
-    ) {
-      return NextResponse.json(
-        { success: false, error: 'At least one field must be provided' },
-        { status: 400 }
-      );
-    }
-
-    // Validate floor
-    let floorNum: number | undefined;
-    if (floor !== null) {
-      floorNum = Number(floor);
-      if (isNaN(floorNum) || floorNum < 1 || floorNum > 100) {
-        return NextResponse.json(
-          { success: false, error: 'Floor must be between 1 and 100' },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Validate status (TYPE-SAFE)
-    const validStatuses = ['available', 'occupied', 'maintenance'] as const;
-    type StatusType = typeof validStatuses[number];
-
-    if (status !== null && !validStatuses.includes(status as StatusType)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid status. Must be available, occupied, or maintenance' },
-        { status: 400 }
-      );
-    }
-
-    // Parse IDs
-    const categoryIdNum = categoryId
-      ? categoryId === 'null'
-        ? null
-        : Number(categoryId)
-      : undefined;
-    if (categoryId && categoryId !== 'null' && isNaN(Number(categoryId))) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid categoryId' },
-        { status: 400 }
-      );
-    }
-
-    const viewTypeIdNum = viewTypeId
-      ? viewTypeId === 'null'
-        ? null
-        : Number(viewTypeId)
-      : undefined;
-    if (viewTypeId && viewTypeId !== 'null' && isNaN(Number(viewTypeId))) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid viewTypeId' },
-        { status: 400 }
-      );
-    }
-
-    const amenityIdsNum = amenityIds
-      .map(id => Number(id))
-      .filter(id => !isNaN(id));
-
-    // Build update data
-    const updateData: RoomUpdateData = {
-      ...(roomNumber !== null && { roomNumber: roomNumber.trim() }),
-      ...(categoryIdNum !== undefined && { categoryId: categoryIdNum }),
-      ...(status !== null && { status: status as StatusType }),
-      ...(floorNum !== undefined && { floor: floorNum }),
-      ...(viewTypeIdNum !== undefined && { viewTypeId: viewTypeIdNum }),
-      ...(amenityIdsNum.length > 0 && { amenityIds: amenityIdsNum }),
-      ...(imageFiles.length > 0 && { images: imageFiles }),
-    };
-
-    const result = await updateRoomService(id, updateData);
-    if (!result.success) {
-      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
-    }
-
-    return NextResponse.json(
-      { success: true, data: result.data, message: 'Room updated' }
-    );
-  } catch (error) {
-    console.error('FormData error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to process upload' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * Handle JSON request (no file upload)
- */
-async function handleJsonRequest(body: RoomUpdateData, id: number) {
-  try {
-    // const body: RoomUpdateData = await request.json();
-
-    // Validate at least one field
-    if (
-      !body.roomNumber &&
-      body.categoryId === undefined &&
-      !body.status &&
-      body.floor === undefined &&
-      body.viewTypeId === undefined &&
-      !body.amenityIds
-    ) {
-      return NextResponse.json(
-        { success: false, error: 'At least one field must be provided' },
-        { status: 400 }
-      );
-    }
-
-    // Validate types
-    if (body.roomNumber !== undefined && typeof body.roomNumber !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'roomNumber must be string' },
-        { status: 400 }
-      );
-    }
-
-    if (body.status !== undefined && !['available', 'occupied', 'maintenance'].includes(body.status)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid status' },
-        { status: 400 }
-      );
-    }
-
-    if (body.floor !== undefined && (typeof body.floor !== 'number' || body.floor < 1 || body.floor > 100)) {
-      return NextResponse.json(
-        { success: false, error: 'Floor must be 1–100' },
-        { status: 400 }
-      );
-    }
-
-    const result = await updateRoomService(id, body);
-
-    if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { success: true, data: result.data, message: 'Room updated' }
-    );
-  } catch (error) {
-    console.error('JSON error:', error);
-    if (error instanceof SyntaxError) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid JSON' },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json(
-      { success: false, error: 'Server error' },
-      { status: 500 }
-    );
-  }
 }
 
 /**

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { performBulkDelete, BulkDeleteTableName } from '@/lib/utils/bulk-delete';
+import { cleanupOldImages } from '@/lib/services/room-service';
+
 import type { ApiResponse } from '@/types/api';
 
 
@@ -92,6 +94,7 @@ export async function POST(request: NextRequest) {
     const tableName = body.tableName as BulkDeleteTableName;
 
     // Perform bulk deletion - NOW PASSING tableName STRING DIRECTLY
+    console.warn("Are roomIds being sent to the performBulkDelete:",body.ids);
     const result = await performBulkDelete(tableName, body.ids);
 
     if (!result.success) {
@@ -100,6 +103,12 @@ export async function POST(request: NextRequest) {
         error: result.error || `Failed to delete records from ${body.tableName}`
       };
       return NextResponse.json(response, { status: 400 });
+    }
+
+    //file system cleanup (only after successful db commit)
+    if(tableName === 'rooms' && result.imageUrls && result.imageUrls.length > 0){
+      console.log(`Starting cleanup for ${result.imageUrls.length} images...`);
+      await cleanupOldImages(result.imageUrls);
     }
 
     const response: ApiResponse = {

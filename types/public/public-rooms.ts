@@ -5,7 +5,7 @@ export interface PublicRoom {
   categoryId: number;
   categoryName: string;
   categorySlug: string;
-  basePrice: number;        // in dollars
+  // basePrice: number;        // in dollars
   maxOccupancy: number;
   primaryImageUrl: string;  // ← never null — always has fallback
 }

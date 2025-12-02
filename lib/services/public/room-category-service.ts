@@ -11,7 +11,7 @@ export async function getPublicRoomCategories(): Promise<PublicRoomCategory[]> {
       id: roomCategories.id,
       name: roomCategories.name,
       description: roomCategories.description,
-      base_price: roomCategories.base_price,
+      // base_price: roomCategories.base_price,
       max_occupancy: roomCategories.max_occupancy,
       featured_image_url: roomCategories.featured_image_url,
     })
@@ -31,7 +31,7 @@ export async function getPublicRoomCategories(): Promise<PublicRoomCategory[]> {
       .replace(/^-+/, '')             // Trim - from start
       .replace(/-+$/, ''),            // Trim - from end
     imageUrl: cat.featured_image_url ?? '/images/fallback-room.webp',
-    basePrice: Number(cat.base_price) / 100, // cents → dollars
+    // basePrice: Number(cat.base_price) / 100, // cents → dollars
     capacity: cat.max_occupancy,
   }));
 }

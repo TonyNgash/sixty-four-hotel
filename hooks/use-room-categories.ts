@@ -26,8 +26,7 @@ interface UseRoomCategoriesReturn extends RoomCategoriesState {
  * Custom hook for managing room categories
  * Follows patterns from use-rooms.ts and use-bookings.ts
  */
-export function useRoomCategories(): UseRoomCategoriesReturn {
-  const [state, setState] = useState<RoomCategoriesState>({
+export function useRoomCategories(): UseRoomCategoriesReturn {const [state, setState] = useState<RoomCategoriesState>({
     categories: [],
     loading: true,
     error: null,
@@ -80,7 +79,9 @@ export function useRoomCategories(): UseRoomCategoriesReturn {
       if (data.description) {
         formData.append('description', data.description);
       }
-      formData.append('basePrice', data.basePrice.toString());
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+      // formData.append('basePrice', data.basePrice.toString());
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
       formData.append('maxOccupancy', data.maxOccupancy.toString());
       
       // Append image file if provided
@@ -126,7 +127,9 @@ export function useRoomCategories(): UseRoomCategoriesReturn {
       // Append text fields if provided
       if (data.name !== undefined) formData.append('name', data.name);
       if (data.description !== undefined) formData.append('description', data.description);
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
       if (data.basePrice !== undefined) formData.append('basePrice', data.basePrice.toString());
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
       if (data.maxOccupancy !== undefined) formData.append('maxOccupancy', data.maxOccupancy.toString());
       
       // Append image file if provided

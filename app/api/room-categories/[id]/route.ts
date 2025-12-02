@@ -56,7 +56,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const id = parseInt(params.id);
+    const awaitedParams = await(params);
+    const id = parseInt(awaitedParams.id);
 
     if (isNaN(id) || id < 1) {
       const response: ApiResponse = {

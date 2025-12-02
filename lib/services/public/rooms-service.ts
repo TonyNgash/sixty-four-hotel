@@ -32,7 +32,7 @@ export async function getRoomsByCategorySlug(slug: string): Promise<{
     .select({
       id: roomCategories.id,
       name: roomCategories.name,
-      base_price: roomCategories.base_price,
+      // base_price: roomCategories.base_price,
       max_occupancy: roomCategories.max_occupancy,
     })
     .from(roomCategories);
@@ -64,7 +64,7 @@ export async function getRoomsByCategorySlug(slug: string): Promise<{
     categoryId: matchedCategory.id,
     categoryName: matchedCategory.name,
     categorySlug,
-    basePrice: Number(matchedCategory.base_price) / 100,
+    // basePrice: Number(matchedCategory.base_price) / 100,
     maxOccupancy: matchedCategory.max_occupancy,
     primaryImageUrl: r.primaryImageUrl ?? '/images/fallback-room.webp',
   }));
@@ -91,7 +91,7 @@ export async function getRoomDetailById(roomId: number): Promise<PublicRoomDetai
       categoryId: roomCategories.id,
       categoryName: roomCategories.name,
       categoryDescription: roomCategories.description,
-      basePriceCents: roomCategories.base_price,
+      // basePriceCents: roomCategories.base_price,
       maxOccupancy: roomCategories.max_occupancy,
       featuredImageUrl: roomCategories.featured_image_url,
       viewName: viewTypes.name,
@@ -159,7 +159,7 @@ export async function getRoomDetailById(roomId: number): Promise<PublicRoomDetai
     roomNumber: data.roomNumber,
     categoryName: data.categoryName,
     categorySlug,
-    basePrice: Number(data.basePriceCents) / 100,
+    // basePrice: Number(data.basePriceCents) / 100,
     maxOccupancy: data.maxOccupancy,
     description: data.categoryDescription ?? '',
     size: '45 m²',

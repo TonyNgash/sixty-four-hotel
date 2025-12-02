@@ -5,7 +5,9 @@ import { eq, and, desc, ne, inArray } from 'drizzle-orm';
 export interface RoomCategoryInsert {
   name: string;
   description?: string;
-  basePrice: number;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
+  // basePrice: number;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   maxOccupancy: number;
   featuredImageUrl?: string;
 }
@@ -13,7 +15,9 @@ export interface RoomCategoryInsert {
 export interface RoomCategoryUpdate {
   name?: string;
   description?: string;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   basePrice?: number;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   maxOccupancy?: number;
   featuredImageUrl?: string;
 }
@@ -63,7 +67,9 @@ export async function createRoomCategory(data: RoomCategoryInsert) {
     .values({
       name: data.name,
       description: data.description || null,
-      base_price: data.basePrice,
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+      // base_price: data.basePrice,
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
       max_occupancy: data.maxOccupancy,
       featured_image_url: data.featuredImageUrl || null,
     })
@@ -81,7 +87,9 @@ export async function updateRoomCategory(id: number, data: RoomCategoryUpdate) {
     .set({
       name: data.name,
       description: data.description,
-      base_price: data.basePrice,
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+      // base_price: data.basePrice,
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
       max_occupancy: data.maxOccupancy,
       featured_image_url: data.featuredImageUrl,
     })

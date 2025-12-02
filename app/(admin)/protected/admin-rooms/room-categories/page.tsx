@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { AdminLayout } from '@/components/admin/layout/admin-layout';
+// import { AdminLayout } from '@/components/admin/layout/admin-layout';
 import { RoomManagementTable } from '@/components/admin/data-tables/room-management-table';
 import { RoomCategoryForm } from '@/components/admin/forms/room-category-form';
 import { Modal } from '@/components/ui/modal';
@@ -16,23 +16,26 @@ import Link from 'next/link';
 interface RoomCategoryFormData {
   name: string;
   description: string;
-  basePrice: string;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
+  // basePrice: string;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   maxOccupancy: string;
   featuredImage?: File;
   featuredImageUrl?: string;
 }
 
-interface TableRoomCategory extends Omit<RoomCategory, 'base_price' | 'max_occupancy'> {
-  base_price: string;
+// /////////////////////////////////////////////////////////////////////////////// gats to  go
+interface TableRoomCategory extends Omit<RoomCategory, 'max_occupancy'> {
+  // base_price: string;
   max_occupancy: number;
   image: React.ReactElement;
 }
 
 const columns: Column<TableRoomCategory>[] = [
   { key: 'image', label: 'Image', sortable: false },
-  { key: 'name', label: 'Category Name', sortable: true },
-  { key: 'description', label: 'Description', sortable: false },
-  { key: 'base_price', label: 'Base Price (KSh)', sortable: true },
+  { key: 'name', label: 'Name', sortable: true },
+  // { key: 'description', label: 'Description', sortable: false },
+  // { key: 'base_price', label: 'Base Price (KSh)', sortable: true },
   { key: 'max_occupancy', label: 'Max Occupancy', sortable: true },
 ];
 
@@ -80,7 +83,9 @@ export default function RoomCategoriesPage() {
       const formData: RoomCategoryFormData = {
         name: category.name,
         description: category.description || '',
-        basePrice: category.base_price.replace(/,/g, ''), // Remove formatting for editing
+        // /////////////////////////////////////////////////////////////////////////////// gats to  go
+        // basePrice: category.base_price.replace(/,/g, ''), // Remove formatting for editing
+        // /////////////////////////////////////////////////////////////////////////////// gats to  go
         maxOccupancy: category.max_occupancy.toString(),
         featuredImageUrl: category.featured_image_url || undefined,
       };
@@ -169,7 +174,8 @@ export default function RoomCategoriesPage() {
       const result = await createCategory({
         name: categoryData.name,
         description: categoryData.description,
-        basePrice: Number(categoryData.basePrice),
+        // /////////////////////////////////////////////////////////////////////////////// gats to  go
+        // basePrice: Number(categoryData.basePrice),
         maxOccupancy: Number(categoryData.maxOccupancy),
         featuredImage: categoryData.featuredImage,
       });
@@ -203,7 +209,8 @@ export default function RoomCategoriesPage() {
       const result = await updateCategory(editingCategory.id, {
         name: categoryData.name,
         description: categoryData.description,
-        basePrice: Number(categoryData.basePrice),
+        // /////////////////////////////////////////////////////////////////////////////// gats to  go
+        // basePrice: Number(categoryData.basePrice),
         maxOccupancy: Number(categoryData.maxOccupancy),
         featuredImage: categoryData.featuredImage,
       });
@@ -231,7 +238,8 @@ export default function RoomCategoriesPage() {
   // Format data for table display with proper typing and images
   const tableData: TableRoomCategory[] = categories.map(category => ({
     ...category,
-    base_price: category.base_price.toLocaleString(),
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+    // base_price: category.base_price.toLocaleString(),
     max_occupancy: category.max_occupancy,
     image: (
       <div className="flex justify-center">

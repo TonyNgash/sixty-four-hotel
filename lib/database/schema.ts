@@ -52,7 +52,9 @@ export const roomCategories = sqliteTable('room_categories', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(), // "Single Bed", "Double Bed", etc.
   description: text('description'),
-  base_price: integer('base_price').notNull(), // Price in cents to avoid floating point issues
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
+  // base_price: integer('base_price').notNull(), // Price in cents to avoid floating point issues
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   max_occupancy: integer('max_occupancy').notNull(),
   featured_image_url: text('featured_image_url'),
   created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s','now'))`),
@@ -62,6 +64,7 @@ export const roomCategories = sqliteTable('room_categories', {
 export const rooms = sqliteTable('rooms', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   room_number: text('room_number').notNull().unique(),
+  room_price: integer('room_price').notNull().default(0),
   category_id: integer('category_id').references(() => roomCategories.id),
   status: text('status', { enum: ['available', 'occupied', 'maintenance'] }).notNull().default('available'),
   floor: integer('floor').notNull(),
@@ -103,7 +106,10 @@ export const roomImages = sqliteTable('room_images', {
 export const bookings = sqliteTable('bookings', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   customer_id: integer('customer_id').references(() => users.id),
-  room_id: integer('room_id').references(() => rooms.id),
+  room_id: integer('room_id').references(() => rooms.id, { onDelete: "set null"}),
+  archived_room_number: text('archived_room_number').notNull().default('000'), 
+  archived_room_category: text('archived_room_category').notNull().default('000'), 
+  archived_room_floor: text('archived_room_floor').notNull().default('000'),
   check_in_date: text('check_in_date').notNull(),
   check_out_date: text('check_out_date').notNull(),
   total_amount: integer('total_amount').notNull(),
@@ -119,9 +125,7 @@ export const bookings = sqliteTable('bookings', {
 // ──────────────────────────────────────────────────────────────
 export const payments = sqliteTable('payments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  booking_id: integer('booking_id')
-    .notNull()
-    .references(() => bookings.id, { onDelete: 'cascade' }),
+  booking_id: integer('booking_id').notNull().references(() => bookings.id, { onDelete: 'cascade' }),
   amount: integer('amount').notNull(), // in KES (whole numbers only — M-Pesa style)
   phone_number: text('phone_number').notNull(), // e.g. "2547xxxxxxxx"
   mpesa_receipt_number: text('mpesa_receipt_number'),

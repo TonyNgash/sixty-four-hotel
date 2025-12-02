@@ -26,7 +26,7 @@ export interface RoomCategory {
   id: number;
   name: string;
   description: string | null;
-  base_price: number;
+  // base_price: number;
   max_occupancy: number;
   featured_image_url: string | null;
   created_at: Date | null;
@@ -35,7 +35,7 @@ export interface RoomCategory {
 export interface RoomCategoryInsert {
   name: string;
   description?: string;
-  basePrice: number;
+  // basePrice: number;
   maxOccupancy: number;
   featuredImageUrl?: string;
 }
@@ -43,7 +43,7 @@ export interface RoomCategoryInsert {
 export interface RoomCategoryUpdate {
   name?: string;
   description?: string | null;
-  basePrice?: number;
+  // basePrice?: number;
   maxOccupancy?: number;
   featuredImageUrl?: string | null;
 }
@@ -51,6 +51,7 @@ export interface RoomCategoryUpdate {
 export interface Room {
   id: number;
   room_number: string;
+  room_price: number;
   category_id: number | null;
   status: 'available' | 'occupied' | 'maintenance';
   floor: number;
@@ -60,6 +61,7 @@ export interface Room {
 
 export interface RoomInsert {
   roomNumber: string;
+  roomPrice: number;
   categoryId?: number;
   status: 'available' | 'occupied' | 'maintenance';
   floor: number;
@@ -68,10 +70,13 @@ export interface RoomInsert {
 
 export interface RoomUpdate {
   roomNumber?: string;
+  roomPrice?: number;
   categoryId?: number | null;
   status?: 'available' | 'occupied' | 'maintenance';
   floor?: number;
   viewTypeId?: number | null;
+  imagesToKeep?:number[];
+  images?:File[];
 }
 
 // Extended room with relationships for frontend display

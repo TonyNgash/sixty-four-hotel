@@ -46,12 +46,16 @@ export async function POST(request: NextRequest) {
     // Extract form fields with type safety
     const name = formData.get('name') as string | null;
     const description = formData.get('description') as string | null;
-    const basePrice = formData.get('basePrice') as string | null;
+
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+    // const basePrice = formData.get('basePrice') as string | null;
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+    
     const maxOccupancy = formData.get('maxOccupancy') as string | null;
     const featuredImage = formData.get('featuredImage') as File | null;
 
     // Validate required fields
-    if (!name || !basePrice || !maxOccupancy) {
+    if (!name || !maxOccupancy) {
       const response: ApiResponse = {
         success: false,
         error: 'Missing required fields: name, basePrice, maxOccupancy'
@@ -60,24 +64,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate numeric fields
-    const basePriceNum = Number(basePrice);
+
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+    // const basePriceNum = Number(basePrice);
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+
     const maxOccupancyNum = Number(maxOccupancy);
     
-    if (isNaN(basePriceNum) || isNaN(maxOccupancyNum)) {
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+    if (isNaN(maxOccupancyNum)) {
       const response: ApiResponse = {
         success: false,
         error: 'basePrice and maxOccupancy must be valid numbers'
       };
       return NextResponse.json(response, { status: 400 });
     }
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
 
-    if (basePriceNum <= 0) {
-      const response: ApiResponse = {
-        success: false,
-        error: 'basePrice must be a positive number'
-      };
-      return NextResponse.json(response, { status: 400 });
-    }
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+    // if (basePriceNum <= 0) {
+    //   const response: ApiResponse = {
+    //     success: false,
+    //     error: 'basePrice must be a positive number'
+    //   };
+    //   return NextResponse.json(response, { status: 400 });
+    // }
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
 
     if (maxOccupancyNum < 1) {
       const response: ApiResponse = {
@@ -116,7 +128,11 @@ export async function POST(request: NextRequest) {
     const createData = {
       name: name.trim(),
       description: description?.trim() || undefined,
-      basePrice: basePriceNum,
+
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+      // basePrice: basePriceNum,
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+
       maxOccupancy: maxOccupancyNum,
       featuredImageUrl: featuredImageUrl
     };

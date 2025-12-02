@@ -4,7 +4,7 @@ export interface PublicRoomDetail {
   roomNumber: string;
   categoryName: string;
   categorySlug: string;
-  basePrice: number; // in dollars
+  // basePrice: number; // in dollars
   maxOccupancy: number;
   description: string;
   size?: string;

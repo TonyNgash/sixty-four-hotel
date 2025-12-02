@@ -1,8 +1,10 @@
 import { db } from '@/lib/database';
 import { rooms, roomAmenities, roomCategories, viewTypes, amenities, roomImages } from '@/lib/database/schema';
-import { eq, and, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, desc, inArray, sql, not} from 'drizzle-orm';
 import type { Room, RoomWithRelations, RoomInsert, RoomUpdate, RoomImage, Amenity, RoomCategory, ViewType } from '@/types/database';
 import { RoomImageInsert } from '@/types/database';
+import { deleteRoomImages, uploadRoomImage } from '@/lib/utils/file-upload';
+
 export interface RoomAmenityInsert {
   roomId: number;
   amenityId: number;
@@ -71,6 +73,18 @@ async function createRoomImagesBulk(images: Array<{
     is_primary: image.is_primary ?? false, // Provide default if null
     created_at: image.created_at,
   }));
+}
+
+export async function deleteRoomImageByUrl(imageUrl: string): Promise<void>{
+  try{
+    await db.delete(roomImages)
+    .where(eq(roomImages.image_url, imageUrl));
+    console.log(`Successfully deleted room image record for URL: ${imageUrl}`);
+  } catch (error){
+    console.error(`Error deleting room image by URL in DB:`,error);
+    // Re-throw the error to be handled by the service layer
+    throw new Error('Failed to delete room image record from the database.');
+  }
 }
 
 export async function deleteRoomImagesByRoomId(roomId: number): Promise<{ success: boolean; deletedCount: number }> {
@@ -230,6 +244,7 @@ export async function updateRoomWithRelations(
 export async function createRoom(data: RoomInsert) {
   return await db.insert(rooms).values({
     room_number: data.roomNumber,
+    room_price: data.roomPrice,
     category_id: data.categoryId,
     status: data.status,
     floor: data.floor,
@@ -243,30 +258,123 @@ export async function createRoom(data: RoomInsert) {
 export async function updateRoom(id: number, data: RoomUpdate): Promise<Room | null> {
   const updateData: {
     room_number?: string;
+    room_price?: number;
     category_id?: number | null;
     status?: 'available' | 'occupied' | 'maintenance';
     floor?: number;
     view_type_id?: number | null;
+
   } = {};
 
+  //1. Prepare scalar updates
   if (data.roomNumber !== undefined) updateData.room_number = data.roomNumber;
+  if (data.roomPrice !== undefined) updateData.room_price = data.roomPrice;
   if (data.categoryId !== undefined) updateData.category_id = data.categoryId;
   if (data.status !== undefined) updateData.status = data.status;
   if (data.floor !== undefined) updateData.floor = data.floor;
   if (data.viewTypeId !== undefined) updateData.view_type_id = data.viewTypeId;
 
-  // Only update if there are fields to update
-  if (Object.keys(updateData).length === 0) {
-    return getRoomById(id);
+  let roomResult: Room | null = null;
+  // let didUpdateScalar = false;
+
+  // 2. Perform scalar field update if necessary
+  if (Object.keys(updateData).length > 0) {
+    const result = await db
+      .update(rooms)
+      .set(updateData)
+      .where(eq(rooms.id, id))
+      .returning();
+    
+    roomResult = result[0] || null;
+    // didUpdateScalar = true;
+  } else {
+    // If no scalar update, fetch the room so we can return it later
+    roomResult = await getRoomById(id);
   }
 
-  const result = await db
-    .update(rooms)
-    .set(updateData)
-    .where(eq(rooms.id, id))
-    .returning();
+  if (!roomResult) {
+    return null; // Room not found
+  }
 
-  return result[0] || null;
+  // --- CRITICAL STEP 3: Image Management Logic ---
+
+  // 3a. Handle Deletion of removed images
+  
+  // Find images associated with this room whose IDs are NOT in imagesToKeep
+  if (data.imagesToKeep !== undefined) {
+    // 1. Get image records to delete from DB
+    const imagesToKeep: number[] = (data.imagesToKeep as unknown as number[] | undefined) || [];
+    const imagesToDelete = await db
+        .select()
+        .from(roomImages)
+        .where(
+            and(
+                eq(roomImages.room_id, id),
+                not(inArray(roomImages.id, imagesToKeep))
+            )
+        );
+
+    if (imagesToDelete.length > 0) {
+      // 2. Delete files from cloud storage
+
+      // STEP 1: Extract all URLs into an array (string[])
+      const urlsToDelete = imagesToDelete.map(image => image.image_url);
+
+      // STEP 2: Call the bulk delete function once with the array
+      const deleteResult = await deleteRoomImages(urlsToDelete);
+       
+      if(!deleteResult.success){
+        console.error("Warning: Failed to delete some physical files form storage:", deleteResult.errors);
+      }
+      // await Promise.all(
+      //     imagesToDelete.map(image => deleteRoomImages(urlsToDelete))
+      // );
+      
+      // 3. Delete records from the database
+      const deletedIds = imagesToDelete.map(img => img.id);
+      await db.delete(roomImages).where(inArray(roomImages.id, deletedIds));
+      console.log(`Deleted ${deletedIds.length} image records for room ${id}.`);
+    }
+  } 
+  // 3b. Handle Addition of new images
+  if (data.images && data.images.length > 0) {
+    // 1. Upload new files to cloud storage
+    const uploadPromises = data.images.map(file => uploadRoomImage(file));
+    const uploadResults = await Promise.all(uploadPromises);
+
+    const uploadedImages = uploadResults
+    .filter(result => result.success && result.publicUrl)
+    .map((result, index) => ({
+      imageUrl: result.publicUrl,
+      altText: result.fileName || `Room image ${index + 1}`
+    }));
+
+    if (uploadedImages.length > 0) {
+      // 2. Determine initial sort order by finding the count of remaining images
+      // We must re-fetch/re-count the kept images to determine the correct sort order
+      const remainingImagesCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(roomImages)
+        .where(eq(roomImages.room_id, id));
+        
+      const initialSortOrder = remainingImagesCount[0].count;
+
+      // 3. Create new image records in the database
+      const imageInserts = uploadedImages.map((image, index) => ({
+        roomId: id,
+        imageUrl: image.imageUrl!,
+        altText: image.altText,
+        sortOrder: initialSortOrder + index,
+        // Since primary status is often set on the client, we default to false here
+        isPrimary: false, 
+      }));
+      await createRoomImagesBulk(imageInserts);
+      console.log(`Added ${uploadedImages.length} new image records for room ${id}.`);
+    }
+  }
+
+
+  return roomResult;
 }
 
 /**

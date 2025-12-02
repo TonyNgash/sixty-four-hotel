@@ -67,11 +67,11 @@ export function useRooms(): UseRoomsReturn {
    * Create a new room with FormData for file upload
    */
   const createRoom = async (data: RoomCreateData & { images?: File[] }): Promise<{ success: boolean; error?: string }> => {
-    console.log('createRoom RECEIVED:', {
-    imagesCount: data.images?.length ?? 0,
-    firstImageName: data.images?.[0]?.name,
-    isFile: data.images?.[0] instanceof File,
-    });
+    // console.log('createRoom RECEIVED:', {
+    // imagesCount: data.images?.length ?? 0,
+    // firstImageName: data.images?.[0]?.name,
+    // isFile: data.images?.[0] instanceof File,
+    // });
     try {
       // Check if we have images to upload
       const hasImages = data.images && data.images.length > 0;
@@ -102,6 +102,7 @@ export function useRooms(): UseRoomsReturn {
     const formData = new FormData();
 
     formData.append('roomNumber', data.roomNumber);
+    formData.append('roomPrice', data.roomPrice);
     formData.append('status', data.status);
     formData.append('floor', data.floor.toString());
 
@@ -129,9 +130,9 @@ export function useRooms(): UseRoomsReturn {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Response error:', error);
-      return { success: false, error: 'Network error' };
+      const error = await response.json();
+      // console.error('Response error:', error.error);
+      return { success: false, error: error.error };
     }
 
     const result: ApiResponse<RoomWithRelations> = await response.json();
@@ -201,6 +202,7 @@ export function useRooms(): UseRoomsReturn {
     const formData = new FormData();
     
     if (data.roomNumber !== undefined) formData.append('roomNumber', data.roomNumber);
+    if (data.roomPrice !== undefined) formData.append('roomPrice', data.roomPrice);
     if (data.status !== undefined) formData.append('status', data.status);
     if (data.floor !== undefined) formData.append('floor', data.floor.toString());
     

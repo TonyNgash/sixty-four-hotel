@@ -19,7 +19,9 @@ import type { RoomCategory } from '@/types/database';
 export interface RoomCategoryCreateData {
   name: string;
   description?: string;
-  basePrice: number;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
+  // basePrice: number;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   maxOccupancy: number;
   featuredImage?: File;
   featuredImageUrl?: string;
@@ -28,7 +30,9 @@ export interface RoomCategoryCreateData {
 export interface RoomCategoryUpdateData {
   name?: string;
   description?: string;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   basePrice?: number;
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
   maxOccupancy?: number;
   featuredImage?: File;
   featuredImageUrl?: string;
@@ -60,13 +64,18 @@ function validateRoomCategoryData(data: RoomCategoryCreateData): string | null {
     return 'Description must be less than 500 characters';
   }
 
-  if (data.basePrice == null || data.basePrice < 0) {
-    return 'Base price must be a positive number';
-  }
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
+  // if (data.basePrice == null || data.basePrice < 0) {
+  //   return 'Base price must be a positive number';
+  // }
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
 
-  if (data.basePrice > 100000000) { // 1,000,000.00 in cents
-    return 'Base price is too high';
-  }
+
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
+  // if (data.basePrice > 100000000) { // 1,000,000.00 in cents
+  //   return 'Base price is too high';
+  // }
+  // /////////////////////////////////////////////////////////////////////////////// gats to  go
 
   if (data.maxOccupancy == null || data.maxOccupancy < 1) {
     return 'Max occupancy must be at least 1';
@@ -217,7 +226,11 @@ export async function createCategoryService(data: RoomCategoryCreateData): Promi
     const insertData: RoomCategoryInsert = {
       name: data.name.trim(),
       description: data.description?.trim() || undefined,
-      basePrice: data.basePrice,
+
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+      // basePrice: data.basePrice,
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+      
       maxOccupancy: data.maxOccupancy,
       featuredImageUrl: featuredImageUrl || undefined
     };
@@ -299,12 +312,14 @@ export async function updateCategoryService(id: number, data: RoomCategoryUpdate
       };
     }
 
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
     if (data.basePrice !== undefined && data.basePrice < 0) {
       return {
         success: false,
         error: 'Base price must be a positive number'
       };
     }
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
 
     if (data.maxOccupancy !== undefined && data.maxOccupancy < 1) {
       return {
@@ -355,7 +370,11 @@ export async function updateCategoryService(id: number, data: RoomCategoryUpdate
     const updateData: RoomCategoryUpdate = {
       name: data.name?.trim(),
       description: data.description?.trim(),
+
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
       basePrice: data.basePrice,
+      // /////////////////////////////////////////////////////////////////////////////// gats to  go
+
       maxOccupancy: data.maxOccupancy,
       featuredImageUrl: featuredImageUrl
     };
@@ -365,7 +384,11 @@ export async function updateCategoryService(id: number, data: RoomCategoryUpdate
     
     if (updateData.name !== undefined) filteredUpdateData.name = updateData.name;
     if (updateData.description !== undefined) filteredUpdateData.description = updateData.description;
+
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
     if (updateData.basePrice !== undefined) filteredUpdateData.basePrice = updateData.basePrice;
+    // /////////////////////////////////////////////////////////////////////////////// gats to  go
+
     if (updateData.maxOccupancy !== undefined) filteredUpdateData.maxOccupancy = updateData.maxOccupancy;
     if (updateData.featuredImageUrl !== undefined) filteredUpdateData.featuredImageUrl = updateData.featuredImageUrl;
 
