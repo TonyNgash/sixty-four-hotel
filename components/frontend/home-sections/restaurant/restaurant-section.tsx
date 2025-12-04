@@ -21,7 +21,7 @@ export default async function RestaurantSection() {
           Order From Our Fine Restaurant
         </h2>
         <h2>
-          
+
         </h2>
 
         {/* Menu Grid */}
