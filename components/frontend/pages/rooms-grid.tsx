@@ -37,7 +37,7 @@ export default function RoomsGrid({ rooms, categoryName }: RoomsGridProps) {
                 sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
               <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold">
-                {/* KSh {room.basePrice.toLocaleString()}/night */}
+                KSh {room.roomPrice.toLocaleString()}/night
               </div>
             </div>
 

@@ -25,9 +25,6 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
-              <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold">
-                KSh {cat.basePrice.toLocaleString()}/night
-              </div>
             </div>
 
             <div className="p-6">

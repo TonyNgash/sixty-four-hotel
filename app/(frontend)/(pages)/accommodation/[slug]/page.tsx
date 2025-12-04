@@ -25,7 +25,6 @@ export async function generateMetadata({ params }: { params: Params }) {
 
 export default async function CategoryPage({ params }: { params: Params }) {
   const { slug } = await params;
-  // const { category, rooms } = await getRoomsByCategorySlug(params.slug);
   const { category, rooms } = await getRoomsByCategorySlug(slug);
 
   if (!category) {

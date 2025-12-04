@@ -14,6 +14,7 @@ import { ne } from 'drizzle-orm';
    ============================================================== */
 export async function GET() {
   try {
+    console.error("here we fail")
     const result = await getAllRoomsService();
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });

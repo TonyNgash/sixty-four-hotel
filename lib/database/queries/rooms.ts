@@ -103,6 +103,7 @@ export async function deleteRoomImagesByRoomId(roomId: number): Promise<{ succes
  * Get all rooms with their relationships including images
  */
 export async function getAllRooms(): Promise<RoomWithRelations[]> {
+  
   const roomResults = await db
     .select()
     .from(rooms)

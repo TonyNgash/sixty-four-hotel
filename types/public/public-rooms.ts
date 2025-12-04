@@ -2,6 +2,7 @@
 export interface PublicRoom {
   id: number;
   roomNumber: string;
+  roomPrice: number;
   categoryId: number;
   categoryName: string;
   categorySlug: string;

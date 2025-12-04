@@ -18,7 +18,7 @@ export default function RoomBookingCta({ price, roomId, roomNumber }: RoomBookin
       <div className="lg:col-span-1">
         <div className="bg-white rounded-2xl shadow-xl p-8 sticky top-8">
           <div className="text-3xl font-bold text-gray-900 mb-2">
-            {/* KSh {price.toLocaleString()} */}
+            KSh {price.toLocaleString()}
             <span className="text-lg font-normal text-gray-600"> / night</span>
           </div>
           <div className="text-sm text-gray-600 mb-6">Taxes included</div>

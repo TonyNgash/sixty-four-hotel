@@ -2,6 +2,7 @@
 export interface PublicRoomDetail {
   id: number;
   roomNumber: string;
+  roomPrice: number;
   categoryName: string;
   categorySlug: string;
   // basePrice: number; // in dollars

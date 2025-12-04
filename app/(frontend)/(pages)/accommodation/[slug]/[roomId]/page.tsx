@@ -91,7 +91,7 @@ export default async function RoomDetailPage({ params }: { params: Params }) {
             </div>
           </div>
 
-          <RoomBookingCta price={room.basePrice} roomId={room.id} />
+          <RoomBookingCta price={room.roomPrice} roomId={room.id} roomNumber={room.roomNumber} />
         </div>
       </section>
 

@@ -120,6 +120,7 @@ export async function cleanupOldImages(imageUrls: string[]): Promise<void> {
  */
 export async function getAllRoomsService(): Promise<ServiceResult<RoomWithRelations[]>> {
   try {
+    
     const rooms = await getAllRooms();
     return { success: true, data: rooms };
   } catch (error) {
@@ -251,11 +252,12 @@ export async function updateRoomService(id: number, data: RoomUpdateData): Promi
     }
 
     if (data.roomNumber) {
-      const trimmed = data.roomNumber;
-      if (trimmed !== existingRoom.room_number) {
-        const exists = await roomExistsByNumber(trimmed);
+      const trimmed = data.roomNumber.trim();
+      const existing = existingRoom.room_number.toString();
+      if (trimmed !== existing) {
+        const exists = await roomExistsByNumber(trimmed.toString());
         if (exists) {
-          return { success: false, error: 'Room number already exists' };
+          return { success: false, error: 'Room number already existsasses' };
         }
       }
     }

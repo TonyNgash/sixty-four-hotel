@@ -60,6 +60,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 * Update a room's details (including images and amenities)
 */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+
   const awaitedParams = await params;
   const id = parseInt(awaitedParams.id, 10);
   if (isNaN(id) || id < 1) {
@@ -131,6 +132,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         imageUrlsToKeep = jsonBody.imagesToKeep;// Assuming client sends imagesToKeep in JSON too
 
     }else{
+        console.error('Is this 400 1 running?');
         return NextResponse.json(
           {success: false, error: "Unsupported content type for PUT request"},
           {status: 400}
@@ -144,6 +146,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }) || imageFiles.length > 0 || imageUrlsToKeep !== undefined;
 
     if (!hasData){
+      console.error('Is this 400 2 running?');
       return NextResponse.json(
         {success: false, error: 'At least one field or image operation required'},
         {status: 400}
@@ -152,6 +155,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // validate status
     if(parsedData.status && !validStatuses.includes(parsedData.status as StatusType)){
+      console.error('Is this 400 3 running?');
       return NextResponse.json(
         {success: false, error: 'Invalid status'},
         {status: 400}
@@ -177,6 +181,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     
     const result = await updateRoomService(id, updateData);
     if (!result.success) {
+      console.error('Is this 400 4 running?');
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
     }
 
@@ -186,6 +191,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   } catch (err: unknown) {
     console.error('PUT error:', err);
     const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Is this 400 5 running?');
     return NextResponse.json(
       { success: false, error: 'Invalid FormData: ' + message },
       { status: 400 }

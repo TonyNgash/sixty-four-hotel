@@ -16,9 +16,12 @@ export default async function RestaurantSection() {
       <div className="container mx-auto px-4 text-center">
         {/* Title */}
         <h2
-          className={`${playfair.className} text-5xl md:text-7xl font-bold text-gray-900 mb-4`}
+          className={`${playfair.className}  pt-10 pb-20 text-5xl md:text-7xl font-bold text-gray-900 mb-4`}
         >
           Order From Our Fine Restaurant
+        </h2>
+        <h2>
+          
         </h2>
 
         {/* Menu Grid */}

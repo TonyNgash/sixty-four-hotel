@@ -49,6 +49,7 @@ export async function getRoomsByCategorySlug(slug: string): Promise<{
     .select({
       id: rooms.id,
       roomNumber: rooms.room_number,
+      roomPrice: rooms.room_price,
       primaryImageUrl: roomImages.image_url,
     })
     .from(rooms)
@@ -61,6 +62,7 @@ export async function getRoomsByCategorySlug(slug: string): Promise<{
   const roomsList: PublicRoom[] = roomsResult.map((r) => ({
     id: r.id,
     roomNumber: r.roomNumber,
+    roomPrice: r.roomPrice,
     categoryId: matchedCategory.id,
     categoryName: matchedCategory.name,
     categorySlug,
@@ -88,6 +90,7 @@ export async function getRoomDetailById(roomId: number): Promise<PublicRoomDetai
     .select({
       roomId: rooms.id,
       roomNumber: rooms.room_number,
+      roomPrice: rooms.room_price,
       categoryId: roomCategories.id,
       categoryName: roomCategories.name,
       categoryDescription: roomCategories.description,
@@ -157,6 +160,7 @@ export async function getRoomDetailById(roomId: number): Promise<PublicRoomDetai
   return {
     id: data.roomId,
     roomNumber: data.roomNumber,
+    roomPrice: data.roomPrice,
     categoryName: data.categoryName,
     categorySlug,
     // basePrice: Number(data.basePriceCents) / 100,
