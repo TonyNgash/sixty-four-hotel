@@ -264,7 +264,7 @@ useEffect(() => {
             <button
               onClick={() => setIsCheckoutOpen(true)} 
               className="w-full py-2 lg:py-6 bg-[#EB1B69] text-white text-md lg:text-xl rounded-full hover:bg-[#d4165a] transition shadow-xl cursor-pointer">
-              View Your Selection • Ksh {formatPrice(total)}
+              View Selection • Ksh {formatPrice(total)}
             </button>
           </div>
         )}

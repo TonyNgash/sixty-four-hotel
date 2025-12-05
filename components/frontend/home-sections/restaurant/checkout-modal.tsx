@@ -31,10 +31,10 @@ export default function CheckoutModal({ isOpen, onClose, cart, total, onClearCar
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 px-4">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#EB1B69] to-pink-600 text-white p-6 flex justify-between items-center">
-          <h2 className="text-2xl font-bold font-playfair">Price Calculator</h2>
+        <div className="bg-gradient-to-r from-[#EB1B69] to-pink-600 text-white px-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold">Price Calculator</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/20 rounded-full transition"
@@ -51,7 +51,7 @@ export default function CheckoutModal({ isOpen, onClose, cart, total, onClearCar
             cart.map(({ item, quantity }) => (
               <div
                 key={item.id}
-                className="flex justify-between items-center py-3 border-b border-gray-100 rounded-xl px-4"
+                className="flex justify-between items-center py-3 border-b border-gray-300 px-4"
               >
                 <div className="flex-1">
                   <p className="font-semibold text-gray-800">{item.name}</p>
@@ -66,10 +66,10 @@ export default function CheckoutModal({ isOpen, onClose, cart, total, onClearCar
         </div>
 
         {/* Total & Actions */}
-        <div className="bg-gray-50 p-6 border-t">
+        <div className="bg-gray-50 px-6 py-2 border-t">
           <div className="flex justify-between items-center mb-6">
-            <span className="text-lg font-semibold">Total ({itemCount} items)</span>
-            <span className="text-3xl font-bold text-[#EB1B69]">Ksh {formatPrice(total)}/-</span>
+            <span className="text-md lg:text-2xl font-semibold">Total ({itemCount} items)</span>
+            <span className="text-md lg:text-2xl font-bold text-[#EB1B69]">Ksh {formatPrice(total)}/-</span>
           </div>
 
           <div className="space-y-3">

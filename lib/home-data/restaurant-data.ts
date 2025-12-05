@@ -18,14 +18,14 @@ export type CategoryKey =
   | 'main-dishes'
   | 'accompaniments';
 
-export const categories: { key: CategoryKey; label: string }[] = [
-  { key: 'breakfast', label: 'Breakfast' },
-  { key: 'hot-beverages', label: 'Hot Beverages' },
-  { key: 'snacks', label: 'Snacks' },
-  { key: 'quick-bites', label: 'Quick Bites' },
-  { key: 'soups', label: 'Soups' },
-  { key: 'main-dishes', label: 'Main Dishes' },
-  { key: 'accompaniments', label: 'Accompaniments' },
+export const categories: { key: CategoryKey; label: string; image: string }[] = [
+  { key: 'breakfast', label: 'Breakfast', image:'/images/home/restaurant/breakfast_01.jpg' },
+  { key: 'hot-beverages', label: 'Hot Beverages', image:'/images/home/restaurant/hot_bevarage_01.jpg' },
+  { key: 'snacks', label: 'Snacks', image:'/images/home/restaurant/snacks_01.jpg' },
+  { key: 'quick-bites', label: 'Quick Bites', image:'/images/home/restaurant/quick_bites_01.webp' },
+  { key: 'soups', label: 'Soups', image:'/images/home/restaurant/soups_01.jpg' },
+  { key: 'main-dishes', label: 'Main Dishes', image:'/images/home/restaurant/main_dishes_01.webp' },
+  { key: 'accompaniments', label: 'Accompaniments', image:'/images/home/restaurant/accompaniments_01.jpg' },
 ];
 
 const fullMenu: MenuItem[] = [
