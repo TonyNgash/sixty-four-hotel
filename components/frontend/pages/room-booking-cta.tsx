@@ -8,9 +8,11 @@ interface RoomBookingCtaProps {
   price: number;
   roomId: number;
   roomNumber: string;
+  roomCategory: string;
+  roomFloor: number;
 }
 
-export default function RoomBookingCta({ price, roomId, roomNumber }: RoomBookingCtaProps) {
+export default function RoomBookingCta({ price, roomId, roomNumber, roomCategory, roomFloor  }: RoomBookingCtaProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -46,6 +48,8 @@ export default function RoomBookingCta({ price, roomId, roomNumber }: RoomBookin
         roomId={roomId}
         roomNumber={roomNumber}
         pricePerNight={price}
+        roomCategory={roomCategory}
+        roomFloor={roomFloor}
       />
     </>
   );

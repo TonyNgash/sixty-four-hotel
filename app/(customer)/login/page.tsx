@@ -7,18 +7,50 @@ import { useCustomerAuthContext } from '@/components/customer/auth/customer-auth
 import { ROUTES } from '@/lib/constants/routes';
 import { Loader2, Smartphone } from 'lucide-react';
 
-type LoginStage = 'email' | 'otp';
+// type LoginStage = 'email' | 'otp';
+type LoginStage = 'phone' | 'otp';
+
+interface LoginFormData {
+  phone: string;
+}
 
 export default function CustomerLoginPage() {
-  const [stage, setStage] = useState<LoginStage>('email');
+  const [stage, setStage] = useState<LoginStage>('phone');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [testOtp, setTestOtp] = useState('');
+  const [formData, setFormData] = useState<LoginFormData>({ phone: '' });
+  
 
   const { requestOtp, verifyOtp } = useCustomerAuthContext();
   const router = useRouter();
+
+  const handleInputChange = (field: keyof LoginFormData, value: string) => {
+    setFormData((prev) => ({...prev,[field]: value}));
+    setError('');
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const fullPhone = formData.phone;
+
+    const result = await requestOtp(fullPhone);
+    
+    if (result.success) {
+      setStage('otp');
+      setTestOtp(result.otp ?? '');
+      setSuccessMessage('OTP sent successfully! Check the console for the code.');
+    } else {
+      setError(result.error || 'Failed to send OTP');
+    }
+    setIsLoading(false);
+  }
 
   const handleEmailSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -29,6 +61,7 @@ export default function CustomerLoginPage() {
     
     if (result.success) {
       setStage('otp');
+      setTestOtp(result.otp ?? '');
       setSuccessMessage('OTP sent successfully! Check the console for the code.');
     } else {
       setError(result.error || 'Failed to send OTP');
@@ -42,7 +75,7 @@ export default function CustomerLoginPage() {
     setIsLoading(true);
     setError('');
 
-    const result = await verifyOtp(email, otp);
+    const result = await verifyOtp(formData.phone, otp);
     
     if (result.success) {
       router.push(ROUTES.customer.dashboard);
@@ -54,7 +87,7 @@ export default function CustomerLoginPage() {
   };
 
   const handleBackToEmail = (): void => {
-    setStage('email');
+    setStage('phone');
     setError('');
     setSuccessMessage('');
   };
@@ -67,28 +100,51 @@ export default function CustomerLoginPage() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Customer Login</h1>
         <p className="text-gray-600 mt-2">
-          {stage === 'email' 
-            ? 'Enter your email to receive an OTP' 
-            : 'Enter the 4-digit OTP sent to your account'
+          {stage === 'phone' 
+            ? 'Enter your phone number to receive an OTP' 
+            : 'Enter the 4-digit OTP sent to your phone'
           }
         </p>
       </div>
 
-      {stage === 'email' ? (
-        <form onSubmit={handleEmailSubmit} className="space-y-4">
+      {stage === 'phone' ? (
+        <form onSubmit={handlePhoneSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+              Phone Number
             </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+            {/* <input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="Enter your email"
-            />
+              placeholder="Enter your phone number"
+            /> */}
+            <div className="relative">
+              <div className="absolute left-3 top-3.5 flex items-center gap-1">
+                <span className="text-sm text-gray-500">+254</span>
+                <div className="w-px h-4 bg-gray-300 mx-2" />
+              </div>
+              <input 
+                type="tel"
+                value={formData.phone.replace('254', '')} 
+                onChange={(e) =>{
+                  let digits = e.target.value.replace(/\D/g, '');
+                  if(digits.startsWith('0')) {
+                    digits = digits.substring(1);
+                  }
+                  const fullNumber = '254' + digits;
+                  handleInputChange('phone', fullNumber);
+                }}
+                pattern="[0-9]*"
+                inputMode='numeric'
+                placeholder="712345678" 
+                maxLength={9}
+                className="w-full border border-gray-200 rounded-xl pl-20 pr-4 py-3 focus:border-pink-300 focus:ring-2 focus:ring-pink-100 focus:outline-none transition-all"
+              />
+            </div>
           </div>
 
           {error && (
@@ -99,7 +155,7 @@ export default function CustomerLoginPage() {
 
           <button
             type="submit"
-            disabled={isLoading || !email}
+            disabled={isLoading || !formData.phone}
             className="w-full bg-amber-600 text-white py-2 px-4 rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {isLoading ? (
@@ -162,12 +218,21 @@ export default function CustomerLoginPage() {
         </form>
       )}
 
+      {testOtp && (
       <div className="mt-6 p-4 bg-blue-50 rounded-md">
         <p className="text-sm text-blue-700">
-          <strong>Development Note:</strong> OTP codes are logged to the console. 
-          Check your browser&apos;s developer tools to see the OTP after requesting it.
+          <strong>Testing Mode:</strong> 
+          Use this otp for now: <span className="font-mono bg-white px-2 py-1 rounded border border-gray-300">{testOtp}</span>
         </p>
       </div>
+      )}
+      {/* Error message */}
+      {/* {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-red-600 text-sm font-medium">{error}</p>
+        </div>
+      )} */}
+      
     </div>
   );
 }

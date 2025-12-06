@@ -1,9 +1,10 @@
 // app/(frontend)/(pages)/accommodation/[slug]/[roomId]/page.tsx
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import { getRoomDetailById } from '@/lib/services/public/rooms-service';
 import RoomGallery from '@/components/frontend/pages/room-gallery';
 import RoomBookingCta from '@/components/frontend/pages/room-booking-cta';
-import PagesHero from '@/components/frontend/pages/pages-hero';
+import RoomHero from '@/components/frontend/pages/room-hero';
 import PagesCta from '@/components/frontend/pages/pages-cta';
 
 interface Params {
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: { params: Params }) {
 
   const { roomId } = await params; 
   const room = await getRoomDetailById(Number(roomId));
-  
+
   if (!room) return { title: 'Room Not Found' };
   return {
     title: `Room ${room.roomNumber} - ${room.categoryName} | SixtyFour Hotel`,
@@ -27,17 +28,23 @@ export async function generateMetadata({ params }: { params: Params }) {
 export default async function RoomDetailPage({ params }: { params: Params }) {
 
   const { roomId } = await params;
-
   const room = await getRoomDetailById(Number(roomId));
+
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  
+  const parentPath = pathname.substring(0, pathname.lastIndexOf('/')) || '/';
+  const parentSlug = parentPath.split('/').pop() || '';
 
   if (!room) notFound();
 
   return (
     <>
-      <PagesHero
+      <RoomHero
         title={`Room ${room.roomNumber}`}
         subtitle={room.categoryName}
         backgroundImage={room.primaryImageUrl}
+        backLink={parentPath}
       />
 
       <section className="py-16 container mx-auto px-4">
@@ -91,7 +98,12 @@ export default async function RoomDetailPage({ params }: { params: Params }) {
             </div>
           </div>
 
-          <RoomBookingCta price={room.roomPrice} roomId={room.id} roomNumber={room.roomNumber} />
+          <RoomBookingCta 
+            price={room.roomPrice} 
+            roomId={room.id} 
+            roomNumber={room.roomNumber}
+            roomCategory={room.categoryName}
+            roomFloor={room.roomFloor} />
         </div>
       </section>
 

@@ -32,13 +32,13 @@ export async function POST(req: NextRequest) {
     if (!booking) {
       return Response.json({ success: false, error: 'Booking not found' });
     }
-
+    console.error("1. Found booking:", booking.id);
     // 2. Find or create customer
     let [customer] = await db.select().from(users).where(eq(users.phone, phone));
-    
+    console.error("2. Found customer:", customer ? customer.id : 'not found');
     if (!customer) {
       // Create new user without password (password-less auth)
-      
+      console.error("Creating new customer");
       const [newUser] = await db.insert(users).values({
         email: email,
         phone: phone,
@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
         email_verified_at: Math.floor(Date.now() / 1000),
       }).returning();
       customer = newUser;
+      console.error("Created new customer:", customer.id);
     }
 
     // 3. Generate a simulated M-Pesa receipt number

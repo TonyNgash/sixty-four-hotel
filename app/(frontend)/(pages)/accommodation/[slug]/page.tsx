@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { getRoomsByCategorySlug } from '@/lib/services/public/rooms-service';
 import RoomGrid from '@/components/frontend/pages/rooms-grid';
-import PagesHero from '@/components/frontend/pages/pages-hero';
+import CategoryHero from '@/components/frontend/pages/category-hero';
 import PagesCta from '@/components/frontend/pages/pages-cta';
 
 export const revalidate = 3600;
@@ -33,10 +33,10 @@ export default async function CategoryPage({ params }: { params: Params }) {
 
   return (
     <>
-      <PagesHero
+      <CategoryHero
         title={category.name}
         subtitle="Rooms in this category"
-        backgroundImage="/images/frontend/bg_01.jpeg"
+        backgroundImage="/images/frontend/air_bnb.jpeg"
       />
 
       <RoomGrid rooms={rooms} categoryName={category.name} />

@@ -4,6 +4,7 @@
 import { useCustomerAuthContext } from '@/components/customer/auth/customer-auth-provider';
 import { ROUTES } from '@/lib/constants/routes';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export function CustomerHeader() {
@@ -23,7 +24,13 @@ export function CustomerHeader() {
             href="/" 
             className="text-2xl font-bold text-amber-600 hover:text-amber-700"
           >
-            Hotel Booking
+            <Image 
+              src="/images/frontend/sixty_four_logo-_no_bg_cropped.png" 
+              alt="SixtyFour Hotel" 
+              className="h-10 w-auto"
+              width={160}
+              height={40}
+            />
           </Link>
 
           <nav className="flex items-center space-x-6">

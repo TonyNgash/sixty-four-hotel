@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function Header() {
@@ -16,12 +17,13 @@ export default function Header() {
             {/* Logo */}
             {/* Replace the logo div with this: */}
             <Link href="/" className="flex items-center space-x-3">
-              <img 
+              <Image 
                 src="/images/frontend/sixty_four_logo-_no_bg_cropped.png" 
                 alt="SixtyFour Hotel" 
                 className="h-10 w-auto"
+                width={160}
+                height={40}
               />
-              
             </Link>
 
             {/* Desktop Navigation */}

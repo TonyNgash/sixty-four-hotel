@@ -64,3 +64,27 @@ body {
 .carousel-slide {
   overscroll-behavior: none;
 }
+
+
+/* Add these custom animations for a smoother feel */
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes soft-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Add these as custom animations */
+@theme {
+  --animate-gentle-pulse: gentle-pulse 2s ease-in-out infinite;
+  --animate-soft-rotate: soft-rotate 3s linear infinite;
+  --animate-float: float 2s ease-in-out infinite;
+}

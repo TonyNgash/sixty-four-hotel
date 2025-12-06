@@ -7,7 +7,7 @@ import { generateToken } from '@/lib/auth/utils';
 import { cookies } from 'next/headers';
 
 interface VerifyOtpRequest {
-  email: string;
+  phone: string;
   code: string;
 }
 
@@ -16,7 +16,7 @@ interface VerifyOtpResponse {
   user?: {
     id: number;
     email: string;
-    role: 'customer';
+    role: 'customer' | 'admin' | 'staff' | string;
     first_name: string | null;
     last_name: string | null;
   };
@@ -26,12 +26,12 @@ interface VerifyOtpResponse {
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const body: VerifyOtpRequest = await req.json();
-    const { email, code } = body;
+    const { phone, code } = body;
 
-    if (!email || !code) {
+    if (!phone || !code) {
       return Response.json({ 
         success: false, 
-        error: 'Email and OTP code are required' 
+        error: 'Phone and OTP code are required' 
       } as VerifyOtpResponse);
     }
 
@@ -43,12 +43,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     // 1. Find user by email
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.phone, phone));
     
     if (!user || user.role !== 'customer') {
       return Response.json({ 
         success: false, 
-        error: 'Invalid email or account not found' 
+        error: 'Invalid phone number or account not found' 
       } as VerifyOtpResponse);
     }
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
       for (const otp of recentOtps) {
         await db.update(phoneVerifications)
-          .set({ attempts: otp.attempts + 1 })
+          .set({ attempts: otp.attempts! + 1 })
           .where(eq(phoneVerifications.id, otp.id));
       }
 
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // 5. Mark OTP as used
     await db.update(phoneVerifications)
-      .set({ attempts: otpRecord.attempts + 1 })
+      .set({ attempts: otpRecord.attempts! + 1 })
       .where(eq(phoneVerifications.id, otpRecord.id));
 
     // 6. Return user data (without sensitive info)

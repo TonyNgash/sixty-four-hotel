@@ -2,12 +2,15 @@
 'use server';
 
 import { db } from '@/lib/database';
-import { bookings, payments } from '@/lib/database/schema';
-import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { payments, bookings, users, phoneVerifications } from '@/lib/database/schema';
+import { eq, and, gt } from 'drizzle-orm';
 
 interface CreateBookingData {
   roomId: number;
+  archivedRoomNumber: string;
+  archivedRoomCategory: string;
+  archivedRoomFloor: string;
   checkIn: string;
   checkOut: string;
   fullName: string;
@@ -22,6 +25,16 @@ interface CreateBookingResult {
   error?: string;
 }
 
+export async function doesPhoneExist(phone: string): Promise<boolean> {
+    console.error(`Checking phone existence for: ${phone}`);
+    const customer = await db.select().from(users).where(eq(users.phone, phone)); 
+    console.error(`Customer's number found: ${customer}`);
+    if (customer.length === 0) {
+      return false;
+    }
+    return true;
+}
+
 export async function createBookingAction(data: CreateBookingData): Promise<CreateBookingResult> {
   try {
     // 1. Create pending booking
@@ -29,6 +42,9 @@ export async function createBookingAction(data: CreateBookingData): Promise<Crea
     const [booking] = await db.insert(bookings).values({
       room_id: data.roomId,
       customer_id: null, // will be filled after payment
+      archived_room_number: data.archivedRoomNumber,
+      archived_room_category: data.archivedRoomCategory,
+      archived_room_floor: data.archivedRoomFloor,
       check_in_date: data.checkIn,
       check_out_date: data.checkOut,
       total_amount: data.totalAmount * 100, // store in cents

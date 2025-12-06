@@ -40,7 +40,7 @@ export default function About() {
           {/* Background Image */}
           <div className="absolute inset-0">
             <Image
-              src="/images/frontend/bg_02.jpeg"
+              src="/images/frontend/bg_04.jpg"
               alt="Sixty Four Hotel - Limuru"
               fill
               className="object-cover"

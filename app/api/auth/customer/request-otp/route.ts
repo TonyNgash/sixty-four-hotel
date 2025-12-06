@@ -12,6 +12,7 @@ interface RequestOtpResponse {
   success: boolean;
   message?: string;
   error?: string;
+  otp?: string; // Included for testing purposes
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -79,7 +80,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     return Response.json({ 
       success: true, 
-      message: 'OTP sent successfully. Check the console for the code.' 
+      message: 'OTP sent successfully. Check the console for the code.',
+      otp: otpCode // Included for testing purposes
     } as RequestOtpResponse);
 
   } catch (error) {

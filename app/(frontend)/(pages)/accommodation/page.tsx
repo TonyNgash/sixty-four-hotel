@@ -1,7 +1,7 @@
 // app/(frontend)/(pages)/accommodation/page.tsx
 import { getPublicRoomCategories } from '@/lib/services/public/room-category-service';
 import CategoryGrid from '@/components/frontend/pages/category-grid';
-import PagesHero from '@/components/frontend/pages/pages-hero';
+import AccommodationHero from '@/components/frontend/pages/accommodation-hero';
 import PagesCta from '@/components/frontend/pages/pages-cta';
 
 export const revalidate = 3600; // Cache for 1 hour
@@ -11,10 +11,10 @@ export default async function AccommodationPage() {
 
   return (
     <>
-      <PagesHero
+      <AccommodationHero
         title="Our Room Types"
         subtitle="Choose the type of stay you're looking for below."
-        backgroundImage="/images/frontend/bg_01.jpeg"
+        backgroundImage="/images/frontend/bg_04.jpg"
       />
 
       <CategoryGrid categories={categories} />

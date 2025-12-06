@@ -15,7 +15,7 @@ interface CustomerUser {
 export interface CustomerAuthContextType {
   user: CustomerUser | null;
   isLoading: boolean;
-  requestOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
+  requestOtp: (email: string) => Promise<{ success: boolean; error?: string, otp?: string }>;
   verifyOtp: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
@@ -44,7 +44,7 @@ export function useCustomerAuth(): CustomerAuthContextType {
     }
   };
 
-  const requestOtp = async (email: string): Promise<{ success: boolean; error?: string }> => {
+  const requestOtp = async (email: string): Promise<{ success: boolean; error?: string; otp?: string }> => {
     try {
       const response = await fetch('/api/auth/customer/request-otp', {
         method: 'POST',
@@ -53,6 +53,7 @@ export function useCustomerAuth(): CustomerAuthContextType {
       });
 
       const data = await response.json();
+      console.log('Received OTP (for testing purposes):', data.otp);
       return data;
     } catch (error) {
       console.error('OTP request failed:', error);
