@@ -8,33 +8,27 @@ import RoomHero from '@/components/frontend/pages/room-hero';
 import PagesCta from '@/components/frontend/pages/pages-cta';
 
 interface Params {
+  slug: string;
   roomId: string;
+}
+
+interface RoomDetailPageProps{
+  params: Params;
 }
 
 export const revalidate = 3600;
 
-export async function generateMetadata({ params }: { params: Params }) {
+// 
 
-  const { roomId } = await params; 
+export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
+
+  const awaitedParams = await params;
+  const  roomId  = awaitedParams.roomId;
   const room = await getRoomDetailById(Number(roomId));
 
-  if (!room) return { title: 'Room Not Found' };
-  return {
-    title: `Room ${room.roomNumber} - ${room.categoryName} | SixtyFour Hotel`,
-    description: room.description,
-  };
-}
-
-export default async function RoomDetailPage({ params }: { params: Params }) {
-
-  const { roomId } = await params;
-  const room = await getRoomDetailById(Number(roomId));
-
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') || '';
   
-  const parentPath = pathname.substring(0, pathname.lastIndexOf('/')) || '/';
-  const parentSlug = parentPath.split('/').pop() || '';
+  
+  const parentPath = `/accommodation/${awaitedParams.slug}`;
 
   if (!room) notFound();
 

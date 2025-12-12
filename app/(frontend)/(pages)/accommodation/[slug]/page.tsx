@@ -12,16 +12,6 @@ interface Params {
   slug: string;
 }
 
-export async function generateMetadata({ params }: { params: Params }) {
-  const { slug } = await params;
-  const { category } = await getRoomsByCategorySlug(slug);
-  if (!category) return { title: 'Category Not Found' };
-
-  return {
-    title: `${category.name} - SixtyFour Hotel`,
-    description: `Browse all available ${category.name} rooms at SixtyFour Hotel & Apartments`,
-  };
-}
 
 export default async function CategoryPage({ params }: { params: Params }) {
   const { slug } = await params;
