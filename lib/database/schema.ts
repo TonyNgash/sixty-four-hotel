@@ -134,7 +134,7 @@ export const payments = sqliteTable('payments', {
   result_code: text('result_code'), // "0" = success
   result_desc: text('result_desc'),
   status: text('status', {
-    enum: ['initiated', 'completed', 'failed', 'cancelled'],
+    enum: ['initiated', 'completed', 'sent_to_phone', 'failed', 'cancelled'],
   })
     .notNull()
     .default('initiated'),

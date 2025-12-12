@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react'; // Import useEffect and useRef
 import { Smartphone, ChevronRight, Shield, Lock, XCircle } from 'lucide-react';
-import { X, Calendar, Loader2, CheckCircle } from 'lucide-react';
+import { X, Loader2, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns/format';
-import { doesPhoneExist, createBookingAction } from '@/app/(frontend)/actions/create-booking';
+import { createBookingAction } from '@/app/(frontend)/actions/create-booking';
 
-
+// ... (interfaces remain the same)
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,14 +28,15 @@ interface BookingFormData {
   roomFloor: number;
 }
 
-
-
 export default function BookingModal({ isOpen, onClose, roomId, roomNumber, roomCategory, roomFloor, pricePerNight }: BookingModalProps) {
   const [isPending, startTransition] = useTransition();
   const [stage, setStage] = useState<'form' | 'waiting' | 'success' | 'error'>('form');
   const [error, setError] = useState('');
+  const [bookingId, setBookingId] = useState<number | null>(null); // NEW: State to store the booking ID
+  const intervalRef = useRef<NodeJS.Timeout | null>(null); // NEW: Ref to store the interval ID
 
   const [formData, setFormData] = useState<BookingFormData>({
+    // ... (formData state remains the same)
     checkIn: '',
     checkOut: '',
     fullName: '',
@@ -46,8 +47,50 @@ export default function BookingModal({ isOpen, onClose, roomId, roomNumber, room
     roomFloor: roomFloor,
   });
 
+  // NEW: Polling logic using useEffect
+  useEffect(() => {
+    // Only start polling if we are in the 'waiting' stage and have a bookingId
+    if (stage === 'waiting' && bookingId) {
+      // Clear any existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+
+      // Set up a new interval to poll for status every 5 seconds
+      intervalRef.current = setInterval(async () => {
+        try {
+          const response = await fetch(`/api/payments/status/${bookingId}`);
+          const data = await response.json();
+
+          if (data.success) {
+            if (data.payment_status === 'paid') {
+              setStage('success');
+            } else if (data.payment_status === 'failed') {
+              setError('Payment was cancelled or failed. Please try again.');
+              setStage('error');
+            }
+            // If status is 'pending', do nothing and let the interval continue
+          } else {
+            console.error('Error polling status:', data.error);
+            // Optionally, handle polling errors
+          }
+        } catch (err) {
+          console.error('Failed to poll payment status:', err);
+        }
+      }, 5000); // Poll every 5 seconds
+    }
+
+    // Cleanup function: clear the interval when the component unmounts or stage changes
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [stage, bookingId]); // Rerun effect only when stage or bookingId changes
+
   if (!isOpen) return null;
 
+  // ... (nights, total, handleInputChange, validateForm functions remain the same)
   const nights = formData.checkIn && formData.checkOut 
     ? Math.max(1, Math.ceil((new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) / (1000 * 60 * 60 * 24))) 
     : 0;
@@ -64,6 +107,12 @@ export default function BookingModal({ isOpen, onClose, roomId, roomNumber, room
       return false;
     }
 
+    console.log('Validating full name length:', formData.fullName.length);
+    if(formData.fullName.length < 2){
+      setError('Full Name must be at least 2 characters long');
+      return false;
+    }
+
     const typePhoneNumber = formData.phone.replace('254', '');
     if (typePhoneNumber.length !== 9) {
       setError('Invalid Phone number');
@@ -74,14 +123,6 @@ export default function BookingModal({ isOpen, onClose, roomId, roomNumber, room
       setError('Phone must be in format 2547... or 2541...');
       return false;
     }
-  
-    // const phoneCheck = await doesPhoneExist(formData.phone);
-    // if(phoneCheck){
-    //   setError(`The number ${formData.phone.replace('254','0')}: already exists.`);
-    //   return false;
-    // }
-      
-    
 
     if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       setError('Please enter a valid email address');
@@ -114,10 +155,9 @@ export default function BookingModal({ isOpen, onClose, roomId, roomNumber, room
       });
 
       if (result.success) {
-        // Simulate payment processing delay
-        setTimeout(() => {
-          setStage('success');
-        }, 3000);
+        // NEW: Store the bookingId to be used for polling
+        setBookingId(result.bookingId || null);
+        // The setTimeout is removed. Polling will handle the stage change.
       } else {
         setError(result.error || 'Something went wrong');
         setStage('error');
@@ -125,6 +165,9 @@ export default function BookingModal({ isOpen, onClose, roomId, roomNumber, room
     });
   };
 
+  
+
+  // ... (The JSX return statement remains largely the same, but ensure the 'waiting' stage message is appropriate)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Blurred translucent overlay with smooth fade */}
@@ -157,6 +200,7 @@ export default function BookingModal({ isOpen, onClose, roomId, roomNumber, room
           <div className="p-6 md:p-8 max-h-[85vh] overflow-y-auto">
             {stage === 'form' && (
               <>
+                {/* ... (form JSX remains the same) */}
                 {/* Header with subtle pink accent */}
                 <div className="mb-8 text-center">
                   <div className="w-12 h-1 bg-gradient-to-r from-pink-300 to-pink-500 mx-auto mb-4 rounded-full" />
@@ -337,7 +381,7 @@ export default function BookingModal({ isOpen, onClose, roomId, roomNumber, room
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Payment Request Sent!</h3>
                 <p className="text-gray-600 mb-1">Check your phone and approve the M-Pesa prompt</p>
-                <p className="text-sm text-gray-500">(Simulation mode - processing...)</p>
+                <p className="text-sm text-gray-500">We are waiting for confirmation...</p>
                 
                 {/* Animated dots for waiting effect */}
                 <div className="flex justify-center gap-1 mt-6">

@@ -2,8 +2,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/database';
 import { payments, bookings, users, phoneVerifications } from '@/lib/database/schema';
-import { eq, and, gt } from 'drizzle-orm';
-import { generateToken } from '@/lib/auth/utils';
+import { eq } from 'drizzle-orm';
 
 interface SimulateCallbackRequest {
   bookingId: number;
@@ -13,32 +12,21 @@ interface SimulateCallbackRequest {
   amount: number;
 }
 
-interface MpesaCallbackItem {
-  Name: string;
-  Value: string;
-}
-
-interface MpesaCallbackMetadata {
-  Item: MpesaCallbackItem[];
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body: SimulateCallbackRequest = await req.json();
-    const { bookingId, phone, email, fullName, amount } = body;
+    const { bookingId, phone, email, fullName } = body;
 
     // 1. Find the pending booking
     const [booking] = await db.select().from(bookings).where(eq(bookings.id, bookingId));
     if (!booking) {
       return Response.json({ success: false, error: 'Booking not found' });
     }
-    console.error("1. Found booking:", booking.id);
     // 2. Find or create customer
     let [customer] = await db.select().from(users).where(eq(users.phone, phone));
-    console.error("2. Found customer:", customer ? customer.id : 'not found');
     if (!customer) {
       // Create new user without password (password-less auth)
-      console.error("Creating new customer");
+      
       const [newUser] = await db.insert(users).values({
         email: email,
         phone: phone,

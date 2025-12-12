@@ -2,9 +2,8 @@
 'use server';
 
 import { db } from '@/lib/database';
-import { revalidatePath } from 'next/cache';
-import { payments, bookings, users, phoneVerifications } from '@/lib/database/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { payments, bookings, users } from '@/lib/database/schema';
+import { eq } from 'drizzle-orm';
 
 interface CreateBookingData {
   roomId: number;
@@ -22,13 +21,14 @@ interface CreateBookingData {
 interface CreateBookingResult {
   success: boolean;
   bookingId?: number;
+  message?: string; // Added for more user feedback
   error?: string;
 }
 
 export async function doesPhoneExist(phone: string): Promise<boolean> {
-    console.error(`Checking phone existence for: ${phone}`);
+    
     const customer = await db.select().from(users).where(eq(users.phone, phone)); 
-    console.error(`Customer's number found: ${customer}`);
+    
     if (customer.length === 0) {
       return false;
     }
@@ -38,7 +38,6 @@ export async function doesPhoneExist(phone: string): Promise<boolean> {
 export async function createBookingAction(data: CreateBookingData): Promise<CreateBookingResult> {
   try {
     // 1. Create pending booking
-    console.error("1. Create pending booking");
     const [booking] = await db.insert(bookings).values({
       room_id: data.roomId,
       customer_id: null, // will be filled after payment
@@ -52,10 +51,8 @@ export async function createBookingAction(data: CreateBookingData): Promise<Crea
       payment_status: 'pending',
       special_requests: `Customer: ${data.fullName}, Email: ${data.email}`,
     }).returning();
-    console.warn(`Total is: ${data.totalAmount}`);
 
     // 2. Create pending payment record
-    console.error("2. Create pending payment record");
     const [payment] = await db.insert(payments).values({
       booking_id: booking.id,
       amount: data.totalAmount * 100,
@@ -64,29 +61,32 @@ export async function createBookingAction(data: CreateBookingData): Promise<Crea
       status: 'initiated',
     }).returning();
 
-    // 3. Simulate payment callback (since we don't have real M-Pesa credentials)
-    console.error("3. Simulate payment callback (since we don't have real M-Pesa credentials) create-booking.ts");
-    const simulateResponse = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/payments/simulate-callback`, {
+    // 3. Call the initiate-payment API to send the STK Push
+    console.log(`Initiating M-Pesa payment for booking ${booking.id}`);
+    const initiateResponse = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/payments/initiate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         bookingId: booking.id,
         phone: data.phone,
-        email: data.email,
+        amount: data.totalAmount, // Send the actual amount, not cents
         fullName: data.fullName,
-        amount: data.totalAmount,
       }),
     });
 
-    const simulateResult = await simulateResponse.json();
+    const initiateResult = await initiateResponse.json();
 
-    if (!simulateResult.success) {
-      return { success: false, error: simulateResult.error || 'Failed to simulate payment' };
+    if (!initiateResult.success) {
+      return { success: false, error: initiateResult.error || 'Failed to initiate M-Pesa payment' };
     }
 
-    return { success: true, bookingId: booking.id };
+    return { 
+      success: true, 
+      bookingId: booking.id,
+      message: initiateResult.message || 'Payment initiated. Please check your phone.'
+    };
   } catch (error) {
     console.error('Booking creation failed:', error);
-    return { success: false, error: 'Something went wrong. Please try again. create-booking.ts:70' };
+    return { success: false, error: 'Something went wrong. Please try again.' };
   }
 }
