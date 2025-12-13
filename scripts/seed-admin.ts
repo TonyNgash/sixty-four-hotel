@@ -6,25 +6,28 @@ import { hash } from 'bcryptjs';
 async function seedAdmin() {
   try {
     // Hash the admin password
-    const hashedPassword = await hash('admin123', 12);
+    const email = 'patrickmburu267@gmail.com';
+    const phone = '254722759936';
+    const normalPassword = 'admin123#456';
+    const hashedPassword = await hash(normalPassword, 12);
     
     // Insert admin user
     await db.insert(users).values({
-      email: 'admin@hotel.com',
+      email: email,
       password_hash: hashedPassword,
       role: 'admin',
-      first_name: 'System',
-      last_name: 'Administrator',
-      phone: '+254790818789',
+      first_name: 'Patrick',
+      last_name: 'Mburu',
+      phone: phone,
       email_verified_at: new Date(),
       phone_verified_at: new Date(),
       account_status: 'active',
     });
 
     console.log('✅ Admin user created successfully!');
-    console.log('📧 Email: admin@hotel.com');
-    console.log('🔑 Password: admin123');
-    console.log('📞 Phone: +1234567890');
+    console.log(`📧 Email: ${email}`);
+    console.log(`🔑 Password: ${normalPassword}`);
+    console.log(`📞 Phone: ${phone}`);
     
   } catch (error) {
     console.error('❌ Error creating admin user:', error);

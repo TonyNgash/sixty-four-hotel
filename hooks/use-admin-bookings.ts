@@ -1,11 +1,10 @@
-// hooks/use-bookings.ts
+// hooks/use-admin-bookings.ts
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useCustomerAuthContext } from '@/components/customer/auth/customer-auth-provider';
-import { getCustomerBookings } from '@/app/actions/customer/get-customer-bookings';
 
-export interface Booking {
+// Define the type for booking data from the API
+export type AdminBooking = {
   id: number;
   checkInDate: string;
   checkOutDate: string;
@@ -13,35 +12,38 @@ export interface Booking {
   status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
   specialRequests: string | null;
-  createdAt: number; // Unix timestamp from database
-  updatedAt: number; // Unix timestamp from database
+  createdAt: number;
+  updatedAt: number;
   archivedRoomNumber: string;
   archivedRoomCategory: string;
   archivedRoomFloor: string;
+  customerId: number | null;
+  customerName: string | null;
+  customerLastName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  roomId: number | null;
   roomNumber: string | null;
   roomPrice: number | null;
   categoryName: string | null;
   viewName: string | null;
-}
+};
 
-export function useCustomerBookings() {
-  const { user } = useCustomerAuthContext();
-  const [bookings, setBookings] = useState<Booking[]>([]);
+export function useAdminBookings() {
+  const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Use useCallback to memoize the fetchBookings function
   const fetchBookings = useCallback(async () => {
-    if (!user?.id) return;
-
     try {
       setIsLoading(true);
       setError(null);
-      const result = await getCustomerBookings(user.id);
+      const response = await fetch('/api/bookings');
+      const data = await response.json();
       
-      if (result.success) {
-        // Ensure the returned data matches our Booking interface
-        const formattedBookings = (result.bookings || []).map(booking => ({
+      if (data.success) {
+        // Ensure the returned data matches our AdminBooking interface
+        const formattedBookings = (data.bookings || []).map((booking: AdminBooking) => ({
           ...booking,
           // Ensure these are numbers as expected by our interface
           createdAt: Number(booking.createdAt),
@@ -49,7 +51,7 @@ export function useCustomerBookings() {
         }));
         setBookings(formattedBookings);
       } else {
-        setError(result.error || 'Failed to fetch bookings');
+        setError(data.error || 'Failed to fetch bookings');
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -57,16 +59,11 @@ export function useCustomerBookings() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, []);
 
   useEffect(() => {
-    if (user?.id) {
-      fetchBookings();
-    } else {
-      setBookings([]);
-      setIsLoading(false);
-    }
-  }, [user?.id, fetchBookings]); // Add fetchBookings to dependencies
+    fetchBookings();
+  }, [fetchBookings]);
 
   const refetch = () => {
     fetchBookings();

@@ -1,4 +1,4 @@
-// hooks/use-customer-auth.ts
+// hooks/use-customer-auth-phone.ts
 'use client';
 
 import { useState, useEffect } from 'react';

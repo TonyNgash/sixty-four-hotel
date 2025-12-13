@@ -30,6 +30,7 @@
 			- /booking-history
 			- /dashboard
 				- page.tsx
+		- /@metadata
 			- layout.tsx
 		- /login
 			- page.tsx
@@ -57,6 +58,10 @@
 			- page.tsx
 		- layout.tsx
 		- page.tsx
+	- /actions
+		- /customer
+			- get-customer-bookings.ts
+		- /frontend
 	- /api
 		- /amenities
 			- /[id]
@@ -156,6 +161,8 @@
 			- customer-auth-provider.tsx
 		- /layout
 			- customer-header.tsx
+		- /shared
+			- booking-card.tsx
 	- /frontend
 		- /customer
 		- /home-sections
@@ -454,5 +461,5 @@
 - structure.txt
 - tsconfig.json
 
-folders: 118
-files: 328
+folders: 123
+files: 330

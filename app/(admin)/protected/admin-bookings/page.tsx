@@ -1,112 +1,24 @@
+// app/(admin)/protected/admin-bookings/page.tsx
 'use client';
 
-import { AdminLayout } from '@/components/admin/layout/admin-layout';
 import { 
   PlusIcon, 
-  PencilIcon, 
   TrashIcon,
   EyeIcon,
   CalendarIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ClockIcon
+  ClockIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils/cn';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAdminBookings, AdminBooking } from '@/hooks/use-admin-bookings';
+import { format } from 'date-fns';
+import { BookingDetailsModal } from '@/components/admin/modals/booking-details-modal';
 
-// Mock data - we'll replace this with real data later
-const mockBookings = [
-  {
-    id: 1,
-    bookingNumber: 'BK-001',
-    customerName: 'James Mutua',
-    customerEmail: 'james.mutua@email.com',
-    customerPhone: '+254712345678',
-    roomNumber: '101',
-    roomType: 'Single Bed',
-    checkIn: '2024-01-20',
-    checkOut: '2024-01-25',
-    nights: 5,
-    guests: 1,
-    totalAmount: 60000,
-    status: 'confirmed',
-    paymentStatus: 'paid',
-    bookingDate: '2024-01-15',
-    specialRequests: 'Early check-in requested',
-  },
-  {
-    id: 2,
-    bookingNumber: 'BK-002',
-    customerName: 'Mary Wanjiku',
-    customerEmail: 'mary.wanjiku@email.com',
-    customerPhone: '+254723456789',
-    roomNumber: '201',
-    roomType: 'Furnished Apartment',
-    checkIn: '2024-01-22',
-    checkOut: '2024-01-24',
-    nights: 2,
-    guests: 2,
-    totalAmount: 50000,
-    status: 'checked_in',
-    paymentStatus: 'paid',
-    bookingDate: '2024-01-18',
-    specialRequests: 'Anniversary celebration',
-  },
-  {
-    id: 3,
-    bookingNumber: 'BK-003',
-    customerName: 'Robert Omondi',
-    customerEmail: 'robert.omondi@email.com',
-    customerPhone: '+254734567890',
-    roomNumber: '102',
-    roomType: 'Double Bed',
-    checkIn: '2024-02-01',
-    checkOut: '2024-02-05',
-    nights: 4,
-    guests: 2,
-    totalAmount: 72000,
-    status: 'pending',
-    paymentStatus: 'pending',
-    bookingDate: '2024-01-19',
-    specialRequests: '',
-  },
-  {
-    id: 4,
-    bookingNumber: 'BK-004',
-    customerName: 'Grace Akinyi',
-    customerEmail: 'grace.akinyi@email.com',
-    customerPhone: '+254745678901',
-    roomNumber: '103',
-    roomType: 'Single Bed',
-    checkIn: '2024-01-18',
-    checkOut: '2024-01-19',
-    nights: 1,
-    guests: 1,
-    totalAmount: 12000,
-    status: 'checked_out',
-    paymentStatus: 'paid',
-    bookingDate: '2024-01-17',
-    specialRequests: 'Late checkout needed',
-  },
-  {
-    id: 5,
-    bookingNumber: 'BK-005',
-    customerName: 'Daniel Kibet',
-    customerEmail: 'daniel.kibet@email.com',
-    customerPhone: '+254756789012',
-    roomNumber: '202',
-    roomType: 'Furnished Apartment',
-    checkIn: '2024-02-10',
-    checkOut: '2024-02-15',
-    nights: 5,
-    guests: 3,
-    totalAmount: 125000,
-    status: 'cancelled',
-    paymentStatus: 'refunded',
-    bookingDate: '2024-01-16',
-    specialRequests: '',
-  },
-];
+// Define a proper type for the filter status
+type FilterStatus = 'all' | 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
 
 const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -131,11 +43,48 @@ const statusIcons = {
   cancelled: XCircleIcon,
 };
 
+// Helper function to safely format a date
+const safeFormatDate = (timestamp: number | string | null | undefined, formatString: string) => {
+  if (!timestamp) return 'Unknown date';
+  
+  try {
+    let date: Date;
+    
+    // If it's already a number, determine if it's in seconds or milliseconds
+    if (typeof timestamp === 'number') {
+      // Unix timestamps are typically in seconds, but JavaScript uses milliseconds
+      // If timestamp is less than a reasonable year 2000 value in milliseconds, assume it's in seconds
+      if (timestamp < 1000000000000) {
+        date = new Date(timestamp * 1000);
+      } else {
+        date = new Date(timestamp);
+      }
+    } 
+    // If it's a string, try to parse it
+    else {
+      date = new Date(timestamp);
+    }
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date error';
+  }
+};
+
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState(mockBookings);
+  const { bookings, isLoading, error, refetch } = useAdminBookings();
   const [selectedBookings, setSelectedBookings] = useState<number[]>([]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled'>('all');
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(null);
+  const [filter, setFilter] = useState<FilterStatus>('all');
 
   const filteredBookings = filter === 'all' 
     ? bookings 
@@ -157,17 +106,122 @@ export default function BookingsPage() {
     );
   };
 
-  const handleDelete = () => {
-    // Temporary mock delete - we'll implement real delete later
-    setBookings(prev => prev.filter(booking => !selectedBookings.includes(booking.id)));
-    setSelectedBookings([]);
-    setShowDeleteModal(false);
+  const handleCancel = async () => {
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          bookingIds: selectedBookings,
+          action: 'cancel'
+        }),
+      });
+
+      if (response.ok) {
+        setSelectedBookings([]);
+        setShowCancelModal(false);
+        refetch();
+      } else {
+        console.error('Failed to cancel bookings');
+      }
+    } catch (error) {
+      console.error('Error cancelling bookings:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          bookingIds: selectedBookings,
+          action: 'delete'
+        }),
+      });
+
+      if (response.ok) {
+        setSelectedBookings([]);
+        setShowDeleteModal(false);
+        refetch();
+      } else {
+        console.error('Failed to delete bookings');
+      }
+    } catch (error) {
+      console.error('Error deleting bookings:', error);
+    }
+  };
+
+  const handleViewDetails = (booking: AdminBooking) => {
+    setSelectedBooking(booking);
+    setShowDetailsModal(true);
+  };
+
+  const handleSingleCancel = (booking: AdminBooking) => {
+    setSelectedBookings([booking.id]);
+    setShowCancelModal(true);
+  };
+
+  const handleSingleDelete = (booking: AdminBooking) => {
+    setSelectedBookings([booking.id]);
+    setShowDeleteModal(true);
   };
 
   const getStatusIcon = (status: keyof typeof statusIcons) => {
     const IconComponent = statusIcons[status];
     return <IconComponent className="h-4 w-4" />;
   };
+
+  const getCustomerFullName = (booking: AdminBooking) => {
+    if (booking.customerName && booking.customerLastName) {
+      return `${booking.customerName} ${booking.customerLastName}`;
+    }
+    if (booking.customerName) {
+      return booking.customerName;
+    }
+    if (booking.specialRequests && booking.specialRequests.includes('Customer:')) {
+      // Extract name from special requests if customer info is not available
+      const match = booking.specialRequests.match(/Customer: ([^,]+)/);
+      return match ? match[1] : 'Unknown Customer';
+    }
+    return 'Unknown Customer';
+  };
+
+  const getRoomInfo = (booking: AdminBooking) => {
+    if (booking.roomNumber && booking.categoryName) {
+      return `Room ${booking.roomNumber} • ${booking.categoryName}`;
+    }
+    return `${booking.archivedRoomNumber} • ${booking.archivedRoomCategory}`;
+  };
+
+  const getNightsCount = (checkIn: string, checkOut: string) => {
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="text-red-800">{error}</div>
+        <button 
+          onClick={refetch}
+          className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -186,13 +240,22 @@ export default function BookingsPage() {
           
           <div className="flex gap-2">
             {selectedBookings.length > 0 && (
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Cancel Selected ({selectedBookings.length})
-              </button>
+              <>
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                  Cancel Selected ({selectedBookings.length})
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Delete Selected ({selectedBookings.length})
+                </button>
+              </>
             )}
             <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               <PlusIcon className="h-4 w-4" />
@@ -236,10 +299,10 @@ export default function BookingsPage() {
         {/* Filter Tabs */}
         <div className="bg-white rounded-lg border shadow-sm p-4">
           <div className="flex flex-wrap gap-2">
-            {['all', 'pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'].map((status) => (
+            {(['all', 'pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'] as FilterStatus[]).map((status) => (
               <button
                 key={status}
-                onClick={() => setFilter(status as any)}
+                onClick={() => setFilter(status)}
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize',
                   filter === status
@@ -304,28 +367,28 @@ export default function BookingsPage() {
                     <td className="px-6 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {booking.bookingNumber}
+                          BK-{String(booking.id).padStart(3, '0')}
                         </div>
                         <div className="text-sm text-gray-900 font-semibold mt-1">
-                          {booking.customerName}
+                          {getCustomerFullName(booking)}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {booking.customerEmail}
+                          {booking.customerEmail || 'No email'}
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
-                          {booking.customerPhone}
+                          {booking.customerPhone || 'No phone'}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        Room {booking.roomNumber} • {booking.roomType}
+                        {getRoomInfo(booking)}
                       </div>
                       <div className="text-sm text-gray-500 mt-1">
-                        {booking.checkIn} → {booking.checkOut}
+                        {booking.checkInDate} → {booking.checkOutDate}
                       </div>
                       <div className="text-xs text-gray-400">
-                        {booking.nights} night{booking.nights !== 1 ? 's' : ''} • {booking.guests} guest{booking.guests !== 1 ? 's' : ''}
+                        {getNightsCount(booking.checkInDate, booking.checkOutDate)} night(s)
                       </div>
                       {booking.specialRequests && (
                         <div className="text-xs text-blue-600 mt-1">
@@ -335,7 +398,7 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-semibold text-gray-900">
-                        KSh {booking.totalAmount.toLocaleString()}
+                        KSh {(booking.totalAmount / 100).toLocaleString()}
                       </div>
                       <div className="mt-1">
                         <span className={cn(
@@ -346,7 +409,7 @@ export default function BookingsPage() {
                         </span>
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
-                        Booked: {booking.bookingDate}
+                        Booked: {safeFormatDate(booking.createdAt, 'MMM dd, yyyy')}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -360,18 +423,24 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
-                        <button className="text-blue-600 hover:text-blue-900 p-1">
+                        <button 
+                          onClick={() => handleViewDetails(booking)}
+                          className="text-blue-600 hover:text-blue-900 p-1"
+                          title="View Details"
+                        >
                           <EyeIcon className="h-4 w-4" />
                         </button>
-                        <button className="text-green-600 hover:text-green-900 p-1">
-                          <PencilIcon className="h-4 w-4" />
+                        <button 
+                          onClick={() => handleSingleCancel(booking)}
+                          className="text-yellow-600 hover:text-yellow-900 p-1"
+                          title="Cancel Booking"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => {
-                            setSelectedBookings([booking.id]);
-                            setShowDeleteModal(true);
-                          }}
+                          onClick={() => handleSingleDelete(booking)}
                           className="text-red-600 hover:text-red-900 p-1"
+                          title="Delete Booking"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
@@ -405,8 +474,8 @@ export default function BookingsPage() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -414,7 +483,36 @@ export default function BookingsPage() {
             </h3>
             <p className="text-gray-600 mb-6">
               Are you sure you want to cancel {selectedBookings.length} selected booking(s)? 
-              This action cannot be undone.
+              This will change their status to &apos;cancelled&apos; but keep them in the system.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Keep Bookings
+              </button>
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+              >
+                Cancel Bookings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Delete Bookings
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to permanently delete {selectedBookings.length} selected booking(s)? 
+              This action cannot be undone and will remove all booking data from the system.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -427,12 +525,19 @@ export default function BookingsPage() {
                 onClick={handleDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Cancel Bookings
+                Delete Permanently
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Booking Details Modal */}
+      <BookingDetailsModal 
+        booking={selectedBooking}
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+      />
     </>
   );
 }

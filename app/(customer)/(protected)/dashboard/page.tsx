@@ -1,32 +1,30 @@
-// app/(customer)/dashboard/page.tsx
+// app/(customer)/(protected)/dashboard/page.tsx
 'use client';
 
 import { useCustomerAuthContext } from '@/components/customer/auth/customer-auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { ROUTES } from '@/lib/constants/routes';
+import { useCustomerBookings } from '@/hooks/use-bookings';
+import { BookingCard } from '@/components/customer/shared/booking-card';
+import LuxuryLoader from '@/components/shared/page-loader';
 
 export default function CustomerDashboardPage() {
-  const { user, isLoading } = useCustomerAuthContext();
+  const { user, isLoading: authLoading } = useCustomerAuthContext();
   const router = useRouter();
+  const { bookings, isLoading: bookingsLoading, error } = useCustomerBookings();
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!authLoading && !user) {
       router.push(ROUTES.customer.login);
     }
-  }, [user, isLoading, router]);
+  }, [user, authLoading, router]);
 
-  if (isLoading) {
+  if (authLoading || bookingsLoading) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <LuxuryLoader />
         </div>
       </div>
     );
@@ -47,21 +45,39 @@ export default function CustomerDashboardPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
           Your Bookings
         </h2>
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">
-            Your bookings will appear here once you make a reservation.
-          </p>
-          <p className="text-sm text-gray-400">
-            This dashboard will show both current and past bookings.
-          </p>
-        </div>
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
+        {bookings.length === 0 && !error ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">
+              You haven&apos;t made any bookings yet.
+            </p>
+            <button 
+              onClick={() => router.push('/accommodation')}
+              className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700"
+            >
+              Browse Rooms
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {bookings.map((booking) => (
+              <BookingCard key={booking.id} booking={booking} />
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
             Account Information

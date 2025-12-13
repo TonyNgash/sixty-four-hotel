@@ -1,5 +1,5 @@
-// app/components/LuxuryLoader.tsx
-'use client';
+//components/shared/page-loader.tsx
+'use client'; 
 
 import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
