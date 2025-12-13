@@ -49,7 +49,7 @@ export function CustomerHeader() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-500 hover:text-gray-700 font-medium"
+                  className="text-gray-500 hover:text-gray-700 font-medium cursor-pointer"
                 >
                   Logout
                 </button>

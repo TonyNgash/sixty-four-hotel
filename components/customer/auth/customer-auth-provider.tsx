@@ -2,7 +2,6 @@
 'use client';
 
 import { createContext, ReactNode, useContext } from 'react';
-import { useCustomerAuth } from '@/hooks/use-customer-auth';
 import { useCustomerAuthPhone } from '@/hooks/use-customer-auth-phone';
 import type { CustomerAuthContextType } from '@/hooks/use-customer-auth';
 

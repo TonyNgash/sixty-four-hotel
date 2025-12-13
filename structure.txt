@@ -1,53 +1,62 @@
 - /app
 	- /(admin)
-		- /bookings
-			- page.tsx
-		- /dashboard
-			- page.tsx
-		- /login
+		- /admin-login
 			- error.tsx
 			- loading.tsx
 			- page.tsx
-		- /revenue
-			- page.tsx
-		- /rooms
-			- /amenities
+		- /protected
+			- /admin-bookings
 				- page.tsx
-			- /room-categories
+			- /admin-dashboard
 				- page.tsx
-			- /view-types
+			- /admin-revenue
 				- page.tsx
-			- page.tsx
-		- /settings
-			- page.tsx
-		- /staff
+			- /admin-rooms
+				- /amenities
+					- page.tsx
+				- /room-categories
+					- page.tsx
+				- /view-types
+					- page.tsx
+				- page.tsx
+			- /admin-settings
+				- page.tsx
+			- /admin-staff
+				- page.tsx
+			- layout.tsx
+		- layout.tsx
+	- /(customer)
+		- /(protected)
+			- /booking-history
+			- /dashboard
+				- page.tsx
+			- layout.tsx
+		- /login
 			- page.tsx
 		- layout.tsx
 	- /(frontend)
-		- /about
-			- page.tsx
-		- /accommodation
-			- /[category]
-				- /[roomid]
+		- /(pages)
+			- /about
+				- page.tsx
+			- /accommodation
+				- /[slug]
+					- /[roomId]
+						- page.tsx
 					- page.tsx
 				- page.tsx
+			- /contact
+				- page.tsx
 			- layout.tsx
-			- page.tsx
-		- /contact
-			- page.tsx
+		- /actions
+			- create-booking.ts
 		- /home-config
 			- sections-config.ts
-			- sections-types.ts
 		- /payment
 			- page.tsx
 		- /room-details
 			- page.tsx
 		- layout.tsx
 		- page.tsx
-	- /(staff)
-		- /view
-			- page.tsx
-		- layout.tsx
 	- /api
 		- /amenities
 			- /[id]
@@ -65,12 +74,33 @@
 					- /a
 					- /attempts
 						- route.ts
+			- /customer
+				- /logout
+					- route.ts
+				- /me
+					- route.ts
+				- /request-otp
+					- route.ts
+				- /request-otp-phone
+					- route.ts
+				- /verify-otp
+					- route.ts
 			- /me
 				- route.ts
 		- /bookings
 		- /bulk-delete
 			- route.ts
-		- /payment
+		- /customer
+		- /payments
+			- /callback
+				- route.ts
+			- /initiate
+				- route.ts
+			- /simulate-callback
+				- route.ts
+			- /status
+				- /[bookingId]
+					- route.ts
 		- /room-categories
 			- /[id]
 				- route.ts
@@ -84,7 +114,6 @@
 			- /[id]
 				- route.ts
 			- route.ts
-	- /contacts
 	- /fonts
 		- geist.ts
 		- montserrat.ts
@@ -122,36 +151,47 @@
 	- /auth
 		- auth-provider.tsx
 		- debug-auth.tsx
+	- /customer
+		- /auth
+			- customer-auth-provider.tsx
+		- /layout
+			- customer-header.tsx
 	- /frontend
-		- /booking-form
-		- /contact-form
+		- /customer
 		- /home-sections
 			- /hero
 				- hero-background.tsx
 				- hero-content.tsx
 				- hero-section.tsx
-			- /layout
-				- lazy-loader.tsx
-				- section-wrapper.tsx
 			- /location
 				- address-card.tsx
 				- location-section.tsx
 				- map-embed.tsx
 			- /night-club
-				- club-showcase.tsx
 				- event-card.tsx
 				- event-carousel.tsx
 				- night-club-section.tsx
 				- sound-wave.tsx
 			- /restaurant
-				- menu-card.tsx
+				- checkout-modal.tsx
+				- menu-modal.tsx
+				- menu-section.tsx
+				- old.restaurant-section.tsx
 				- restaurant-section.tsx
-				- restaurant-showcase.tsx
 			- /room-categories
 				- category-card.tsx
-				- category-grid.tsx
 				- room-categories-section.tsx
-		- /room-cards
+		- /pages
+			- accommodation-hero.tsx
+			- back-btn.tsx
+			- booking-modal.tsx
+			- category-grid.tsx
+			- category-hero.tsx
+			- pages-cta.tsx
+			- room-booking-cta.tsx
+			- room-gallery.tsx
+			- room-hero.tsx
+			- rooms-grid.tsx
 	- /layout
 		- admin-sidebar.tsx
 		- footer.tsx
@@ -161,6 +201,8 @@
 		- confirmation-modal.tsx
 		- error-message.tsx
 		- loading-spinner.tsx
+		- page-loader.tsx
+		- progress-bar.tsx
 	- /ui
 		- button.tsx
 		- card.tsx
@@ -171,6 +213,8 @@
 	- use-animations.ts
 	- use-auth.ts
 	- use-bookings.ts
+	- use-customer-auth-phone.ts
+	- use-customer-auth.ts
 	- use-home-sections.ts
 	- use-local-storage.ts
 	- use-login.ts
@@ -180,7 +224,6 @@
 	- use-view-types.ts
 - /lib
 	- /auth
-		- actions.ts
 		- config.ts
 		- context.ts
 		- index.ts
@@ -188,24 +231,22 @@
 		- types.ts
 		- utils.ts
 	- /constants
-		- home-sections.ts
-		- pricing.ts
-		- room-types.ts
 		- routes.ts
 	- /database
 		- /queries
 			- amenities.ts
 			- bookings.ts
 			- payments.ts
+			- phone-verifications.ts
 			- room-categories.ts
 			- room-images.ts
 			- rooms.ts
 			- staff.ts
+			- users.ts
 			- view-types.ts
 		- index.ts
 		- schema.ts
 	- /home-data
-		- home-data-services.ts
 		- location-data.ts
 		- night-club-data.ts
 		- restaurant-data.ts
@@ -214,6 +255,9 @@
 		- audit-log.ts
 		- rate-limiter.ts
 	- /services
+		- /public
+			- room-category-service.ts
+			- rooms-service.ts
 		- amenity-service.ts
 		- booking-service.ts
 		- email-service.ts
@@ -237,14 +281,12 @@
 		- 0003_snapshot.json
 		- 0004_snapshot.json
 		- 0005_snapshot.json
-		- 0006_snapshot.json
-	- 0000_heavy_hydra.sql
-	- 0001_new_vindicator.sql
-	- 0002_far_owl.sql
-	- 0003_wide_kang.sql
-	- 0004_good_mephisto.sql
-	- 0005_old_doctor_spectrum.sql
-	- 0006_worried_plazm.sql
+	- 0000_special_bishop.sql
+	- 0001_wet_skullbuster.sql
+	- 0002_fair_marvel_zombies.sql
+	- 0003_busy_shocker.sql
+	- 0004_tiresome_caretaker.sql
+	- 0005_sudden_gabe_jones.sql
 - /public
 	- /fonts
 		- Geist-VariableFont_wght.woff2
@@ -254,25 +296,18 @@
 		- PlayfairDisplay-VariableFont_wght.woff2
 	- /images
 		- /categories
-			- 13830686-lens-flares-001-1762868512334-rc8hmasjxgp.jpg
-			- food1-1761496104536-qz8qv8x1quq.jpeg
-			- gradient-01-1762604413638-6uc70aaxbap.png
-			- image4-1761321799231-xa384rij3w.jpg
-			- image9-1761321768038-0cc50o26ne6.jpg
-			- isometric-bnb-apartment-1761340856479-0di0xf7h9b9g.png
-			- isometric-double-bed-1761340764504-k6gy53ydgtg.png
-			- isometric-single-bed-1761340713641-0hgau2m29uaj.png
-			- isometric-single-bed-1761340792893-fsgzz9e10x.png
+			- 13830686-lens-flares-001-1764436666717-o0kw1xdjgxg.jpg
+			- 13830686-lens-flares-001-1764436868043-ksj1bnzgsps.jpg
+			- 13830686-lens-flares-001-1764437254111-b9obcwkcpda.jpg
+			- 3188948-1764434909854-te7autpm4wd.jpg
+			- bnb-apartment-1763764590668-igx9mwegxko.png
+			- double-bed-1763764497299-gl3fwz9gvz.png
+			- img-20251127-wa0023-1764594542935-j77oo2queor.jpg
+			- single-bed-1763764413389-jmx0dabsik.png
 		- /frontend
+			- air_bnb.jpeg
 			- bg_01.jpeg
-			- bg_02.jpeg
-			- bg_03.jpeg
-			- image.jpg
-			- image2.jpg
-			- image3.jpg
-			- image4.jpg
-			- image5.jpg
-			- image6.jpg
+			- bg_04.jpg
 			- sixty_four_logo-_no_bg_cropped.png
 		- /home
 			- /hero
@@ -280,9 +315,9 @@
 				- palm_tree_01.webp
 				- sunglare_overlay_01.webp
 			- /night-club
+				- edm_night_02.jpeg
 				- reggae-night.jpg
-				- reggae-night.webp
-				- rnb-night.webp
+				- soul_night_02.jpeg
 				- soul-night.webp
 				- wave-1.webp
 				- wave-10.webp
@@ -295,29 +330,95 @@
 				- wave-8.webp
 				- wave-9.webp
 			- /restaurant
-				- food1.webp
-				- food2.webp
-				- food3.webp
-				- food4.webp
+				- /menu
+					- /accompaniments
+						- mukimo_01.jpg
+						- regular_chips_01.webp
+						- rice_02.jpg
+						- roast_potatoes_01.jpg
+						- ugali_01.jpg
+					- /breakfast
+						- best_01.jpg
+						- fried_eggs_01.webp
+						- fried_eggs_combo_02.jpg
+						- fried_eggs_fries_01.webp
+						- pancakes_01.jpg
+						- spanish_omelet_01.jpeg
+					- /hot-beverages
+						- african_tea_01.jpg
+						- black_coffee_01.webp
+						- black_tea_01.jpeg
+						- dawa_01.jpg
+						- herbal_tea_01.jpg
+						- hot_chocolate_01.jpg
+						- lemon_tea_01.webp
+						- white_coffee_01.jpg
+					- /main-dishes
+						- beef_1kg_01.jpg
+						- beef_half_01.jpg
+						- beef_quarter_01.jpg
+						- chicken_full_01.jpg
+						- chicken_half_01.webp
+						- chicken_quarter_01.jpg
+						- fish_200_01.jpg
+						- king_platter_01.jpg
+						- mini_platter_01.jpg
+						- pork_1kg_01.jpg
+						- pork_half_01.jpg
+					- /quick-bites
+						- beef_burger_01.jpg
+						- cheese_burger_01.webp
+						- chicken_wings_01.jpg
+						- fish_fingers_01.webp
+						- mushroom_soup_01.webp
+					- /snacks
+						- beef_samosa_01.png
+						- chips_01.jpg
+						- choma_sausage_01.jpeg
+						- eggs_boiled_fried_01.webp
+						- eggs_boiled_fried_02.jpg
+						- sausages_01.webp
+						- sauteed_potatoes_01.jpg
+					- /soups
+						- mushroom_soup_01.webp
+						- ossubucco_01.jpg
+				- accompaniments_01.jpg
+				- breakfast_01.jpg
+				- hot_bevarage_01.jpg
+				- main_dishes_01.webp
+				- quick_bites_01.webp
+				- snacks_01.jpg
+				- soups_01.jpg
 			- /room-categories
-				- apartment.webp
-				- double-room.webp
-				- single-room.webp
 		- /icons
 		- /rooms
-			- image.jpg
-			- image2.jpg
-			- image3.jpg
-			- room-13830686-lens-flares-001-1763084430065-bq5n7d4j26n.jpg
-			- room-3188948-1763084429456-fdetukwo1wp.jpg
-			- room-club-02-1763084508982-fa8g92didgf.jpg
-			- room-club-03-1763084508983-63ngoqwskx9.jpg
-			- room-club-12-1763084508985-3fftpk1stqf.jpg
-			- room-club-13-1763084508987-j6hvnxswptm.jpg
-			- room-club-14-1763084508988-aqwkisa1r9v.jpg
-			- room-food2-1763084876302-u51zh00kawq.jpg
-			- room-food3-1763084876302-sowajkb94ln.jpg
-			- room-food4-1763084876303-rh2obskgzt.jpeg
+			- room-air-bnb-1765536738408-rhe6v9tmj.jpeg
+			- room-bath2-1764937859383-nx3wauh8cai.jpg
+			- room-bath3-1764938011947-3l0ik53gxwy.jpg
+			- room-bnb-beds-001-1764938011931-cuyf1lw9xnq.jpg
+			- room-bnb-beds-002-1764938011934-g5a5dg41wh8.jpg
+			- room-bnb-beds-005-1764937859379-gwc7ztjbqtu.jpg
+			- room-bnb-beds-006-1764937859379-3f0dy826zwr.jpg
+			- room-bnb-beds-007-1764937859380-4ydezglncsl.jpg
+			- room-bnb-two-couch-001-1764937859378-u53mmzeenf.jpg
+			- room-bnb-two-couch-0010-1764937859382-b3u01j3iz4u.jpg
+			- room-bnb-two-couch-002-1764937859380-lml9exzxmxg.jpg
+			- room-bnb-two-couch-004-1764937859381-vnx7j1cdux.jpg
+			- room-bnb-two-couch-007-1764937859381-nxb6d7573id.jpg
+			- room-bnb-two-couch-009-1764937859382-45txvpma7v7.jpg
+			- room-bnb-with-table-01-1764938011936-o4el2o3ugco.jpg
+			- room-bnb-with-table-010-1764938011940-cndgfjo41li.jpg
+			- room-bnb-with-table-011-1764938011946-mjh7tk5pokh.jpg
+			- room-bnb-with-table-02-1764938011929-c2mng5023lt.jpg
+			- room-bnb-with-table-03-1764938011937-8bas2kct0lr.jpg
+			- room-bnb-with-table-07-1764938011938-2reum73z3i7.jpg
+			- room-bnb-with-table-09-1764938011939-pe8ghgslyv.jpg
+			- room-red-curtain-01-1764938079049-axekemz1zih.jpg
+			- room-red-curtain-02-1764938079048-mgp2eql0vm.jpg
+			- room-red-curtain-03-1764938079050-6zvwd7n0csq.jpg
+			- room-red-curtain-04-1764938079050-c0gsdp1qbpc.jpg
+			- room-red-curtain-05-1764938079047-30vqhn9b61x.jpg
+		- fallback-room.webp
 	- /videos
 	- file.svg
 	- globe.svg
@@ -331,11 +432,13 @@
 	- animations.css
 	- components.ts
 - /types
+	- /public
+		- mpesa-types.ts
+		- public-room-category.ts
+		- public-room-detail.ts
+		- public-rooms.ts
 	- api.ts
 	- database.ts
-	- forms.ts
-	- home-sections.ts
-	- index.ts
 - .gitignore
 - drizzle.config.ts
 - eslint.config.mjs
@@ -348,9 +451,8 @@
 - package.json
 - postcss.config.mjs
 - README.md
-- sixty-four.zip
 - structure.txt
 - tsconfig.json
 
-folders: 90
-files: 254
+folders: 118
+files: 328

@@ -1,9 +1,10 @@
 // app/(customer)/login/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCustomerAuthContext } from '@/components/customer/auth/customer-auth-provider';
+
+import { useState, useEffect } from 'react'; // Make sure useEffect is imported
+import { useRouter } from 'next/navigation'; // Make sure useRouter is imported
+import { useCustomerAuthContext } from '@/components/customer/auth/customer-auth-provider'; // Make sure this is imported
 import { ROUTES } from '@/lib/constants/routes';
 import { Loader2, Smartphone } from 'lucide-react';
 
@@ -23,10 +24,17 @@ export default function CustomerLoginPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [testOtp, setTestOtp] = useState('');
   const [formData, setFormData] = useState<LoginFormData>({ phone: '' });
-  
-
+  const { user } = useCustomerAuthContext(); // This is where you get the auth state
   const { requestOtp, verifyOtp } = useCustomerAuthContext();
+  
   const router = useRouter();
+
+  useEffect(() => {
+    // If the user is already logged in, redirect them to the dashboard
+    if (!isLoading && user) {
+      router.push(ROUTES.customer.dashboard);
+    }
+  }, [user, isLoading, router]); // Dependency array
 
   const handleInputChange = (field: keyof LoginFormData, value: string) => {
     setFormData((prev) => ({...prev,[field]: value}));
@@ -78,6 +86,8 @@ export default function CustomerLoginPage() {
     const result = await verifyOtp(formData.phone, otp);
     
     if (result.success) {
+      // The user state is already updated in the context by the verifyOtp function.
+      // We can now safely navigate. The dashboard page will see the updated user state immediately.
       router.push(ROUTES.customer.dashboard);
     } else {
       setError(result.error || 'Invalid OTP code');
