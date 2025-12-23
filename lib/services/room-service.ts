@@ -251,16 +251,17 @@ export async function updateRoomService(id: number, data: RoomUpdateData): Promi
       return { success: false, error: 'Room not found' };
     }
 
-    if (data.roomNumber) {
-      const trimmed = data.roomNumber.trim();
-      const existing = existingRoom.room_number.toString();
-      if (trimmed !== existing) {
-        const exists = await roomExistsByNumber(trimmed.toString());
-        if (exists) {
-          return { success: false, error: 'Room number already existsasses' };
-        }
-      }
-    }
+    // if (data.roomNumber) {
+    //   console.log(typeof data.roomNumber);
+    //   const trimmed = data.roomNumber;
+    //   const existing = existingRoom.room_number.toString();
+    //   if (trimmed !== existing) {
+    //     const exists = await roomExistsByNumber(trimmed.toString());
+    //     if (exists) {
+    //       return { success: false, error: 'Room number already existsasses' };
+    //     }
+    //   }
+    // }
 
     let parsedRoomPrice: number | undefined;
     if(data.roomPrice !== undefined && data.roomPrice !== null && data.roomPrice.trim() !== ""){

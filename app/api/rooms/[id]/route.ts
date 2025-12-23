@@ -182,6 +182,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const result = await updateRoomService(id, updateData);
     if (!result.success) {
       console.error('Is this 400 4 running?');
+      console.warn('Update failed:', result.error);
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
     }
 
