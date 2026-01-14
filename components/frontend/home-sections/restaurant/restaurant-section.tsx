@@ -53,7 +53,7 @@ export default function NewMenuSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               <div className="absolute bottom-0 left-0 p-10 text-white">
                 <h3 className="text-4xl md:text-5xl font-bold font-playfair mb-2">Breakfast</h3>
-                <p className="text-lg opacity-90">Rise & Dine in Style</p>
+                <p className="text-lg opacity-90">Tap to open full Menu</p>
               </div>
             </div>
 
@@ -106,7 +106,7 @@ export default function NewMenuSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
               <div className="absolute bottom-0 left-0 p-10 text-white">
                 <h3 className="text-4xl font-bold font-playfair">Quick Bites</h3>
-                <p className="text-lg opacity-90">Bold Flavors, Fast</p>
+                <p className="text-lg opacity-90">Tap to open full Menu</p>
               </div>
             </div>
 
@@ -141,7 +141,7 @@ export default function NewMenuSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 p-12 text-white">
                 <h3 className="text-5xl md:text-6xl font-bold font-playfair mb-3">Main Dishes</h3>
-                <p className="text-xl md:text-2xl opacity-95">Signature Plates • Unforgettable Taste</p>
+                <p className="text-xl md:text-2xl opacity-95">Tap to open full Menu</p>
               </div>
             </div>
 

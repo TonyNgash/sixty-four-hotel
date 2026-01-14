@@ -138,7 +138,7 @@ useEffect(() => {
 
         {/* Header */}
         <div className="pl-4 pr-4 lg:pl-6 lg:pr-6 border-b bg-gradient-to-r from-[#EB1B69] to-pink-600 text-white flex justify-between items-center rounded-t-xl">
-          <h2 className="text-center text-xl md:text-2xl font-bold font-playfair">Restaurant Menu</h2>
+          <h2 className="text-center text-xl md:text-2xl font-bold font-playfair">Price Calculator</h2>
           <button onClick={onClose} className="p-3 hover:bg-white/20 rounded-full">
             <X className="w-7 h-7" />
           </button>
@@ -166,7 +166,7 @@ useEffect(() => {
               return (
                 <section 
                   key={category.key} 
-                  className="min-w-full px-6 pb-6 overflow-y-auto" 
+                  className="min-w-full px-1 sm:px-4 md:px-6 pb-6 overflow-y-auto" 
                   style={{
                     height:'calc(100vh - 200px)',
                     maxHeight: '100%',
@@ -182,45 +182,43 @@ useEffect(() => {
                   <h3 className="text-lg font-bold text-center mb-4 sticky top-0 text-gray-800 z-10 py-4  bg-white">
                     {category.label}
                   </h3>
-                  <div className="space-y-6 pb-10 md:pb-20 ">
+                  <div className="space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-6 pb-10 md:pb-20 ">
                     {items.map(item => {
                       const qty = cart.find(c => c.item.id === item.id)?.quantity || 0;
                       const itemPrice = parseInt(item.price);
                       return (
-                        <div key={item.id} className="flex gap-2 bg-gray-100 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition">
+                        <div key={item.id} className="flex gap-1 bg-gray-100 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition">
                           {/* <img src={item.image} alt={item.name} className="w-32 h-32 object-cover" /> */}
-                          <img 
-                            src={item.image} 
-                            alt={item.name} 
-                            className="w-22 object-cover" 
-                            />
+                          <img  src={item.image}  alt={item.name}  className="w-22 object-cover" />
                           <div className="flex-1 py-2 pr-5 flex flex-col justify-between">
                             <div>
-                              <h4 className="font-bold text-md">{item.name}</h4>
+                              <h4 className="font-bold text-md text-black">{item.name}</h4>
                               <p className="text-sm text-gray-600 mt-1">{item.description}</p>
                             </div>
-                            <div className="flex justify-between items-center mt-6">
+                            <div className="flex flex-col sm:flex-row justify-between items-center mt-4">
                               <span className="text-md lg:text-2xl font-bold text-pink-500">
                                 Ksh {formatPrice(itemPrice)}/-
                               </span>
-                              {qty === 0 ? (
-                                <button
-                                  onClick={() => addToCart(item)}
-                                  className="px-8 py-3 bg-[#EB1B69] text-white rounded-full font-medium hover:bg-[#c7155a] transition"
-                                >
-                                  Add
-                                </button>
-                              ) : (
-                                <div className="flex items-center gap-1">
-                                  <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-blue-500 text-white flex items-center">
-                                    <Minus className="w-6 h-6 p-1 lg:w-10 lg:h-10 lg:p-2" />
+                              <span>
+                                {qty === 0 ? (
+                                  <button
+                                    onClick={() => addToCart(item)}
+                                    className="px-8 py-3 bg-[#EB1B69] text-white rounded-full font-medium hover:bg-[#c7155a] transition"
+                                  >
+                                    Add
                                   </button>
-                                  <span className="text-xl lg:text-3xl font-bold w-8 lg:w-12 text-center">{qty}</span>
-                                  <button onClick={() => updateQuantity(item.id, +1)} className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-[#EB1B69] text-white flex items-center">
-                                    <Plus className="w-6 h-6 p-1 lg:w-10 lg:h-10 lg:p-2" />
-                                  </button>
-                                </div>
-                              )}
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-blue-500 text-white flex items-center">
+                                      <Minus className="w-6 h-6 p-1 lg:w-10 lg:h-10 lg:p-2" />
+                                    </button>
+                                    <span className="text-xl lg:text-3xl font-bold w-8 lg:w-12 text-center">{qty}</span>
+                                    <button onClick={() => updateQuantity(item.id, +1)} className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-[#EB1B69] text-white flex items-center">
+                                      <Plus className="w-6 h-6 p-1 lg:w-10 lg:h-10 lg:p-2" />
+                                    </button>
+                                  </div>
+                                )}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -237,13 +235,13 @@ useEffect(() => {
             onClick={prev}
             className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 lg:w-18 lg:h-18 rounded-full bg-white/90 shadow-xl flex items-center hover:bg-white transition"
           >
-            <ChevronLeft className="w-7 h-7 lg:w-17 lg:h-17" />
+            <ChevronLeft className="w-7 h-7 text-pink-700 lg:w-17 lg:h-17" />
           </button>
           <button
             onClick={next}
             className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 lg:w-18 lg:h-18 rounded-full bg-white/90 shadow-xl flex-center hover:bg-white transition"
           >
-            <ChevronRight className="w-7 h-7 lg:w-17 lg:h-17" />
+            <ChevronRight className="w-7 h-7 text-pink-700 lg:w-17 lg:h-17" />
           </button>
 
           {/* Dots */}

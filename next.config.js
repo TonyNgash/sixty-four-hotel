@@ -1,13 +1,14 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // 1. Add this line here
+  output: 'standalone',
 
-const nextConfig: NextConfig = {
-  eslint:{
+  eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-  /* config options here */
   images: {
     remotePatterns: [
       {
@@ -19,17 +20,13 @@ const nextConfig: NextConfig = {
     ],
   },
   
-  // 💡 NEW: Configuration for Webpack/Turbopack externals
   webpack: (config, { isServer }) => {
     if (isServer) {
-      // Mark the problematic package as external on the server side
       config.externals.push('@libsql/hrana-client');
     }
-    
-    // Clear the previous raw-loader configuration (it likely wasn't the issue)
-    
     return config;
   },
 };
 
-export default nextConfig;
+// 2. Change the export to standard CommonJS for better compatibility with cPanel
+module.exports = nextConfig;
